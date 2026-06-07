@@ -1,14 +1,21 @@
+# Python
 venv/
 .venv/
-.venv-1/
-
 __pycache__/
+*.pyc
 
-*.pth
-*.pt
+# Jupyter
+.ipynb_checkpoints/
 
-data/
-
+# Model training
 checkpoints/
 
-.ipynb_checkpoints/
+# Dataset files
+data/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
