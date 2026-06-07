@@ -1,7 +1,7 @@
 from pathlib import Path
 import h5py
 
-from mri_bbox_generator import mask_to_bbox
+from backend.datasets.mri_bbox_generator import mask_to_bbox
 
 
 def load_sample(mat_path):
