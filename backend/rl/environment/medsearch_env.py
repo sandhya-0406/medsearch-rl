@@ -1,9 +1,10 @@
 # backend/rl/environment/medsearch_env.py
 import random
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from navigation_engine import NavigationEngine
+from backend.rl.environment.navigation_engine import NavigationEngine
 
 class MedSearchEnv(NavigationEngine):
 
@@ -81,12 +82,17 @@ class MedSearchEnv(NavigationEngine):
             self.get_center()
         )
 
+        self.previous_distance = self.compute_distance()
+
+        self.visited_positions = set()
+
         return self.get_state()
 
     def step(self, action):
 
-        # Do nothing if episode already ended
+        # Episode already finished
         if self.done:
+
             return (
                 self.get_state(),
                 0,
@@ -94,75 +100,108 @@ class MedSearchEnv(NavigationEngine):
                 {}
             )
 
-        # Adaptive movement size
-        step_size = int(0.2 * self.width)
+        # Adaptive movement
+        step_size = int(
+            0.2 * self.width
+        )
 
-        # -------------------------
+        # -------------------
         # Movement actions
-        # -------------------------
+        # -------------------
 
-        # Move Up
         if action == 0:
+
             self.y -= step_size
 
-        # Move Down
         elif action == 1:
+
             self.y += step_size
 
-        # Move Left
         elif action == 2:
+
             self.x -= step_size
 
-        # Move Right
         elif action == 3:
+
             self.x += step_size
 
-        # -------------------------
+        # -------------------
         # Zoom actions
-        # -------------------------
+        # -------------------
 
-        # Zoom In
         elif action == 4:
 
             self.zoom_in()
 
-        # Zoom Out
         elif action == 5:
 
             self.zoom_out()
 
+        # -------------------
         # Stop action
+        # -------------------
+
         elif action == 6:
+
             self.done = True
 
-        # -------------------------
+        # -------------------
         # Boundary clipping
-        # -------------------------
+        # -------------------
+
+        before_clip = (
+            self.x,
+            self.y
+        )
 
         self.clip_window()
 
-        # -------------------------
+        after_clip = (
+            self.x,
+            self.y
+        )
+
+        if before_clip != after_clip:
+
+            self.boundary_penalty = -0.02
+
+        else:
+
+            self.boundary_penalty = 0
+        # -------------------
         # Update step count
-        # -------------------------
+        # -------------------
 
         self.current_step += 1
 
         # Maximum episode length
         if self.current_step >= self.max_steps:
+
             self.done = True
 
-        # -------------------------
+        # -------------------
         # Reward
-        # -------------------------
+        # -------------------
 
         reward = self.calculate_reward()
 
-        self.action_history.append(action)
-        self.reward_history.append(reward)
-        
         current_iou = self.compute_iou()
 
-        self.iou_history.append(current_iou)
+        # -------------------
+        # History recording
+        # -------------------
+
+        self.action_history.append(
+            action
+        )
+
+        self.reward_history.append(
+            reward
+        )
+
+        self.iou_history.append(
+            current_iou
+        )
 
         self.window_history.append(
 
@@ -175,17 +214,21 @@ class MedSearchEnv(NavigationEngine):
 
         )
 
-        self.trajectory.append(self.get_center())
+        self.trajectory.append(
 
-        # -------------------------
+            self.get_center()
+
+        )
+
+        # -------------------
         # Next state
-        # -------------------------
+        # -------------------
 
         next_state = self.get_state()
 
-        # -------------------------
+        # -------------------
         # Info dictionary
-        # -------------------------
+        # -------------------
 
         info = {
 
@@ -193,25 +236,28 @@ class MedSearchEnv(NavigationEngine):
 
             "iou": current_iou,
 
+            "reward": reward,
+
             "window": [
+
                 self.x,
                 self.y,
                 self.width,
                 self.height
+
             ],
 
-            "center": self.get_center(),
+            "center": self.get_center()
 
-            "action_history": self.action_history,
-
-            "reward_history": self.reward_history
         }
 
         return (
+
             next_state,
             reward,
             self.done,
             info
+
         )
 
     def render(self):
@@ -341,22 +387,116 @@ class MedSearchEnv(NavigationEngine):
 
         current_iou = self.compute_iou()
 
-        reward = (
+        # ------------------------
+        # IoU reward
+        # ------------------------
+        iou_reward = (
             current_iou -
             self.previous_iou
         )
 
-        self.previous_iou = current_iou
+        # ------------------------
+        # Distance reward
+        # ------------------------
+        current_distance = self.compute_distance()
+
+        distance_reward = (
+
+            self.previous_distance -
+            current_distance
+
+        ) / 512
+
+        # ------------------------
+        # Exploration reward
+        # ------------------------
+        position = tuple(
+
+            np.round(
+                self.get_center(),
+                0
+            ).astype(int)
+
+        )
+
+        if position not in self.visited_positions:
+
+            exploration_reward = 0.02
+
+            self.visited_positions.add(position)
+
+        else:
+
+            exploration_reward = 0
+
+        # ------------------------
+        # Step penalty
+        # ------------------------
+        step_penalty = -0.02
+
+        # ------------------------
+        # Success bonus
+        # ------------------------
+        success_bonus = 0
 
         if current_iou >= 0.7:
 
-            reward += 10
+            success_bonus = 5
 
             self.done = True
 
+        # ------------------------
+        # Early stop penalty
+        # ------------------------
+        early_stop_penalty = 0
+
         if self.done and current_iou < 0.7:
 
-            reward -= 5
+            early_stop_penalty = -5
+
+        # ------------------------
+        # Failure penalty
+        # ------------------------
+        failure_penalty = 0
+
+        if (
+
+            self.current_step >= self.max_steps
+
+            and
+
+            current_iou < 0.7
+
+        ):
+
+            failure_penalty = -2
+
+        # ------------------------
+        # Total reward
+        # ------------------------
+        reward = (
+
+            iou_reward
+
+            + distance_reward
+
+            + exploration_reward
+
+            + success_bonus
+
+            + step_penalty
+
+            + early_stop_penalty
+
+            + failure_penalty
+
+            + self.boundary_penalty
+
+        )
+
+        self.previous_iou = current_iou
+
+        self.previous_distance = current_distance
 
         return reward
     
@@ -412,5 +552,30 @@ class MedSearchEnv(NavigationEngine):
         )
 
         return iou
+    
+    def get_target_center(self):
 
+        tx1, ty1, tx2, ty2 = self.target_box
+
+        center_x = (tx1 + tx2) / 2
+        center_y = (ty1 + ty2) / 2
+
+        return center_x, center_y
+    
+    def compute_distance(self):
+
+        agent_x, agent_y = self.get_center()
+
+        target_x, target_y = self.get_target_center()
+
+        distance = np.sqrt(
+
+            (agent_x - target_x)**2 +
+
+            (agent_y - target_y)**2
+
+        )
+
+        return distance
+    
 
