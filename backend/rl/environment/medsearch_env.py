@@ -3,8 +3,9 @@ import random
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from navigation_engine import NavigationEngine
 
-class MedSearchEnv:
+class MedSearchEnv(NavigationEngine):
 
     def __init__(self, dataset, max_steps=50):
 
@@ -26,9 +27,16 @@ class MedSearchEnv:
 
     def reset(self):
 
+        # History variables
+        self.trajectory = []
+        self.action_history = []
+        self.reward_history = []
+        self.iou_history = []
+        self.window_history = []
+
         idx = random.randint(
             0,
-            len(self.dataset)-1
+            len(self.dataset) - 1
         )
 
         self.current_sample = self.dataset[idx]
@@ -37,7 +45,7 @@ class MedSearchEnv:
 
             idx = random.randint(
                 0,
-                len(self.dataset)-1
+                len(self.dataset) - 1
             )
 
             self.current_sample = self.dataset[idx]
@@ -50,14 +58,28 @@ class MedSearchEnv:
 
         self.done = False
 
+        # Initial window
         self.width = 256
         self.height = 256
 
-        self.x = (512 - self.width)//2
-        self.y = (512 - self.height)//2
-
+        self.x = (512 - self.width) // 2
+        self.y = (512 - self.height) // 2
 
         self.previous_iou = 0.0
+
+        # Save first position
+        self.window_history.append(
+            [
+                self.x,
+                self.y,
+                self.width,
+                self.height
+            ]
+        )
+
+        self.trajectory.append(
+            self.get_center()
+        )
 
         return self.get_state()
 
@@ -102,22 +124,12 @@ class MedSearchEnv:
         # Zoom In
         elif action == 4:
 
-            self.width = int(self.width * 0.8)
-            self.height = int(self.height * 0.8)
-
-            # Prevent window from becoming too small
-            self.width = max(32, self.width)
-            self.height = max(32, self.height)
+            self.zoom_in()
 
         # Zoom Out
         elif action == 5:
 
-            self.width = int(self.width * 1.2)
-            self.height = int(self.height * 1.2)
-
-            # Prevent window from exceeding image size
-            self.width = min(512, self.width)
-            self.height = min(512, self.height)
+            self.zoom_out()
 
         # Stop action
         elif action == 6:
@@ -127,18 +139,7 @@ class MedSearchEnv:
         # Boundary clipping
         # -------------------------
 
-        self.x = max(0, self.x)
-        self.y = max(0, self.y)
-
-        self.x = min(
-            self.x,
-            512 - self.width
-        )
-
-        self.y = min(
-            self.y,
-            512 - self.height
-        )
+        self.clip_window()
 
         # -------------------------
         # Update step count
@@ -156,6 +157,26 @@ class MedSearchEnv:
 
         reward = self.calculate_reward()
 
+        self.action_history.append(action)
+        self.reward_history.append(reward)
+        
+        current_iou = self.compute_iou()
+
+        self.iou_history.append(current_iou)
+
+        self.window_history.append(
+
+            [
+                self.x,
+                self.y,
+                self.width,
+                self.height
+            ]
+
+        )
+
+        self.trajectory.append(self.get_center())
+
         # -------------------------
         # Next state
         # -------------------------
@@ -170,12 +191,20 @@ class MedSearchEnv:
 
             "step": self.current_step,
 
+            "iou": current_iou,
+
             "window": [
                 self.x,
                 self.y,
                 self.width,
                 self.height
-            ]
+            ],
+
+            "center": self.get_center(),
+
+            "action_history": self.action_history,
+
+            "reward_history": self.reward_history
         }
 
         return (
@@ -234,6 +263,27 @@ class MedSearchEnv:
         )
 
         ax.add_patch(agent_rect)
+
+        center = self.get_center()
+
+        ax.scatter(
+            center[0],
+            center[1],
+            s=50,
+            c='blue'
+        )
+
+        if len(self.trajectory) > 1:
+
+            xs = [p[0] for p in self.trajectory]
+            ys = [p[1] for p in self.trajectory]
+
+            ax.plot(
+                xs,
+                ys,
+                linewidth=2,
+                color='yellow'
+            )
 
         iou = self.compute_iou()
 
@@ -362,3 +412,5 @@ class MedSearchEnv:
         )
 
         return iou
+
+
