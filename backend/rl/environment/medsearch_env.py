@@ -366,19 +366,12 @@ class MedSearchEnv(NavigationEngine):
         )
 
         state = {
-
             "patch": patch,
-
             "x_norm": x_norm,
-
             "y_norm": y_norm,
-
             "w_norm": w_norm,
-
             "h_norm": h_norm,
-
             "step_ratio": step_ratio
-
         }
 
         return state
