@@ -1,0 +1,9 @@
+path: data/brain_yolo
+
+train: images/train
+val: images/val
+
+names:
+  0: meningioma
+  1: glioma
+  2: pituitary

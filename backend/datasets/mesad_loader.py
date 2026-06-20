@@ -1,6 +1,6 @@
 from pathlib import Path
 import cv2
-
+from backend.datasets.surgical_classes import CLASS_MAP
 
 class MESADLoader:
 
@@ -51,7 +51,7 @@ class MESADLoader:
                 label = line.strip()
 
                 if label:
-                    labels.append(label)
+                    labels.append(CLASS_MAP[label])
 
         return boxes, labels
     

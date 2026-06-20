@@ -1,0 +1,27 @@
+path: /content/esad_yolo
+
+train: images/train
+val: images/val
+
+names:
+  0: CuttingMesocolon
+  1: PullingVasDeferens
+  2: ClippingVasDeferens
+  3: CuttingVasDeferens
+  4: ClippingTissue
+  5: PullingSeminalVesicle
+  6: ClippingSeminalVesicle
+  7: CuttingSeminalVesicle
+  8: SuckingBlood
+  9: SuckingSmoke
+  10: PullingTissue
+  11: CuttingTissue
+  12: BaggingProstate
+  13: BladderNeckDissection
+  14: BladderAnastomosis
+  15: PullingProstate
+  16: ClippingBladderNeck
+  17: CuttingThread
+  18: UrethraDissection
+  19: CuttingProstate
+  20: PullingBladderNeck

@@ -1,6 +1,6 @@
 from pathlib import Path
 import cv2
-
+from backend.datasets.surgical_classes import CLASS_MAP
 class ESADLoader:
 
     def __init__(self,dataset_path):
@@ -47,7 +47,7 @@ class ESADLoader:
                 )
 
                 labels.append(
-                    self.class_names[class_id]
+                     CLASS_MAP[self.class_names[class_id]]
                 )
 
         return boxes, labels
