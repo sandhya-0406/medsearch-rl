@@ -146,3 +146,14 @@ class DQNAgent:
             )
 
         return q_values.squeeze(0).cpu()
+    
+    def decay_epsilon(self):
+
+        if self.epsilon > self.epsilon_min:
+
+            self.epsilon *= self.epsilon_decay
+
+            self.epsilon = max(
+                self.epsilon,
+                self.epsilon_min
+            )
