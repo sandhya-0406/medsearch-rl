@@ -115,20 +115,20 @@ class StateEncoder(nn.Module):
 
         return state_vector
     
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    encoder = StateEncoder()
+#     encoder = StateEncoder()
 
-    image_patch = torch.randn(1, 3, 128, 128)
+#     image_patch = torch.randn(1, 3, 128, 128)
 
-    spatial_info = torch.tensor(
-        [[0.25, 0.50, 0.40, 0.40, 0.10]],
-        dtype=torch.float32
-    )
+#     spatial_info = torch.tensor(
+#         [[0.25, 0.50, 0.40, 0.40, 0.10]],
+#         dtype=torch.float32
+#     )
 
-    state = encoder(
-        image_patch,
-        spatial_info
-    )
+#     state = encoder(
+#         image_patch,
+#         spatial_info
+#     )
 
-    print("State shape:", state.shape)
+#     print("State shape:", state.shape)
