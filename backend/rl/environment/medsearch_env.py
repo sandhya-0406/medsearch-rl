@@ -8,7 +8,7 @@ from backend.rl.environment.navigation_engine import NavigationEngine
 
 class MedSearchEnv(NavigationEngine):
 
-    def __init__(self, dataset, max_steps=50):
+    def __init__(self, dataset, max_steps=100):
 
         self.dataset = dataset
         self.max_steps = max_steps
@@ -58,15 +58,17 @@ class MedSearchEnv(NavigationEngine):
         self.current_step = 0
 
         self.done = False
+        self.stopped = False
 
         # Initial window
-        self.width = 256
-        self.height = 256
+        self.width = 192
+        self.height = 192
 
-        self.x = (512 - self.width) // 2
-        self.y = (512 - self.height) // 2
-
+        self.x = random.randint(0,512-self.width)
+        self.y = random.randint(0,512-self.height)
+        
         self.previous_iou = 0.0
+        self.max_iou_episode = 0
 
         # Save first position
         self.window_history.append(
@@ -102,7 +104,7 @@ class MedSearchEnv(NavigationEngine):
 
         # Adaptive movement
         step_size = int(
-            0.2 * self.width
+            0.15 * self.width
         )
 
         # -------------------
@@ -144,6 +146,7 @@ class MedSearchEnv(NavigationEngine):
         elif action == 6:
 
             self.done = True
+            self.stopped = True
 
         # -------------------
         # Boundary clipping
@@ -186,6 +189,11 @@ class MedSearchEnv(NavigationEngine):
         reward = self.calculate_reward()
 
         current_iou = self.compute_iou()
+
+        self.max_iou_episode = max(
+            self.max_iou_episode,
+            current_iou
+        )
 
         # -------------------
         # History recording
@@ -235,6 +243,8 @@ class MedSearchEnv(NavigationEngine):
             "step": self.current_step,
 
             "iou": current_iou,
+
+            "max_iou": self.max_iou_episode,
 
             "reward": reward,
 
@@ -380,29 +390,27 @@ class MedSearchEnv(NavigationEngine):
 
         current_iou = self.compute_iou()
 
-        # ------------------------
-        # IoU reward
-        # ------------------------
-        iou_reward = (
+        # ---------------------------------
+        # IoU improvement reward
+        # ---------------------------------
+        iou_reward = 20 * (
             current_iou -
             self.previous_iou
         )
 
-        # ------------------------
+        # ---------------------------------
         # Distance reward
-        # ------------------------
+        # ---------------------------------
         current_distance = self.compute_distance()
 
-        distance_reward = (
-
+        distance_reward = 2 * (
             self.previous_distance -
             current_distance
-
         ) / 512
 
-        # ------------------------
+        # ---------------------------------
         # Exploration reward
-        # ------------------------
+        # ---------------------------------
         position = tuple(
 
             np.round(
@@ -414,7 +422,7 @@ class MedSearchEnv(NavigationEngine):
 
         if position not in self.visited_positions:
 
-            exploration_reward = 0.02
+            exploration_reward = 0.01
 
             self.visited_positions.add(position)
 
@@ -422,34 +430,39 @@ class MedSearchEnv(NavigationEngine):
 
             exploration_reward = 0
 
-        # ------------------------
+        # ---------------------------------
         # Step penalty
-        # ------------------------
-        step_penalty = -0.02
+        # ---------------------------------
+        step_penalty = -0.005
 
-        # ------------------------
+        # ---------------------------------
+        # Boundary penalty
+        # ---------------------------------
+        boundary_penalty = self.boundary_penalty
+
+        # ---------------------------------
         # Success bonus
-        # ------------------------
+        # ---------------------------------
         success_bonus = 0
 
-        if current_iou >= 0.7:
+        if current_iou >= 0.3:
 
-            success_bonus = 5
+            success_bonus = 10
 
             self.done = True
 
-        # ------------------------
+        # ---------------------------------
         # Early stop penalty
-        # ------------------------
+        # ---------------------------------
         early_stop_penalty = 0
 
-        if self.done and current_iou < 0.7:
+        if self.stopped and current_iou < 0.3:
 
-            early_stop_penalty = -5
+            early_stop_penalty = -3
 
-        # ------------------------
+        # ---------------------------------
         # Failure penalty
-        # ------------------------
+        # ---------------------------------
         failure_penalty = 0
 
         if (
@@ -458,15 +471,15 @@ class MedSearchEnv(NavigationEngine):
 
             and
 
-            current_iou < 0.7
+            current_iou < 0.3
 
         ):
 
-            failure_penalty = -2
+            failure_penalty = -1
 
-        # ------------------------
+        # ---------------------------------
         # Total reward
-        # ------------------------
+        # ---------------------------------
         reward = (
 
             iou_reward
@@ -475,15 +488,15 @@ class MedSearchEnv(NavigationEngine):
 
             + exploration_reward
 
-            + success_bonus
-
             + step_penalty
+
+            + boundary_penalty
+
+            + success_bonus
 
             + early_stop_penalty
 
             + failure_penalty
-
-            + self.boundary_penalty
 
         )
 

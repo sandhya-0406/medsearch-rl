@@ -13,11 +13,11 @@ class DQNAgent:
             self,
             state_dim=517,
             num_actions=7,
-            lr=1e-4,
+            lr=5e-4,
             gamma=0.99,
             epsilon=1.0,
             epsilon_min=0.05,
-            epsilon_decay=0.995,
+            epsilon_decay=0.998,
             device=None
     ):
 
@@ -80,10 +80,13 @@ class DQNAgent:
     def decay_epsilon(self):
 
         if self.epsilon > self.epsilon_min:
+
             self.epsilon *= self.epsilon_decay
 
-            if self.epsilon < self.epsilon_min:
-                self.epsilon = self.epsilon_min
+            self.epsilon = max(
+                self.epsilon,
+                self.epsilon_min
+            )
 
     def update_target_network(self):
 
@@ -147,13 +150,4 @@ class DQNAgent:
 
         return q_values.squeeze(0).cpu()
     
-    def decay_epsilon(self):
-
-        if self.epsilon > self.epsilon_min:
-
-            self.epsilon *= self.epsilon_decay
-
-            self.epsilon = max(
-                self.epsilon,
-                self.epsilon_min
-            )
+    
