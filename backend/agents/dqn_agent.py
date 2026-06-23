@@ -1,19 +1,17 @@
 # backend/agents/dqn_agent.py
-
 import random
 import torch
 import torch.nn.functional as F
 
-from backend.models.dqn import DQN
-
+from backend.models.visual_dqn import VisualDQN
 
 class DQNAgent:
 
     def __init__(
             self,
-            state_dim=517,
-            num_actions=7,
-            lr=5e-4,
+            state_dim=577,
+            num_actions=6,
+            lr=1e-4,
             gamma=0.99,
             epsilon=1.0,
             epsilon_min=0.05,
@@ -35,16 +33,14 @@ class DQNAgent:
         )
 
         # Online network
-        self.q_network = DQN(
-            state_dim,
-            num_actions
-        ).to(self.device)
 
-        # Target network
-        self.target_network = DQN(
-            state_dim,
-            num_actions
-        ).to(self.device)
+        self.q_network = VisualDQN().to(
+            self.device
+        )
+
+        self.target_network = VisualDQN().to(
+            self.device
+        )
 
         self.update_target_network()
 
@@ -53,26 +49,43 @@ class DQNAgent:
             lr=lr
         )
 
-    def select_action(self, state):
+    def select_action(
+            self,
+            state
+    ):
 
-        # Exploration
+        patch, spatial = state
+
         if random.random() < self.epsilon:
+
             return random.randint(
                 0,
-                self.num_actions - 1
+                self.num_actions-1
             )
 
-        # Exploitation
-        state = torch.FloatTensor(state)\
-            .unsqueeze(0)\
-            .to(self.device)
+        patch = patch.unsqueeze(0).to(
+            self.device
+        )
+
+        spatial = spatial.unsqueeze(0).to(
+            self.device
+        )
 
         with torch.no_grad():
-            q_values = self.q_network(state)
+
+            q_values = self.q_network(
+
+                patch,
+                spatial
+
+            )
 
         action = torch.argmax(
+
             q_values,
+
             dim=1
+
         ).item()
 
         return action
@@ -91,8 +104,18 @@ class DQNAgent:
     def update_target_network(self):
 
         self.target_network.load_state_dict(
-            self.q_network.state_dict()
-        )
+        self.q_network.state_dict()
+    )
+
+        # for target_param, local_param in zip(
+        #         self.target_network.parameters(),
+        #         self.q_network.parameters()
+        # ):
+
+            # target_param.data.copy_(
+            #     tau*local_param.data +
+            #     (1-tau)*target_param.data
+            # )
 
     def save_checkpoint(self, path):
 
@@ -136,18 +159,36 @@ class DQNAgent:
 
         self.epsilon = checkpoint["epsilon"]
 
-    def predict_q_values(self, state):
+    def predict_q_values(
+            self,
+            state
+    ):
 
-        state = torch.FloatTensor(state)\
-            .unsqueeze(0)\
-            .to(self.device)
+        patch, spatial = state
+
+        patch = patch.unsqueeze(
+            0
+        ).to(
+            self.device
+        )
+
+        spatial = spatial.unsqueeze(
+            0
+        ).to(
+            self.device
+        )
 
         with torch.no_grad():
 
             q_values = self.q_network(
-                state
+
+                patch,
+                spatial
+
             )
 
-        return q_values.squeeze(0).cpu()
+        return q_values.squeeze(
+            0
+        ).cpu()
     
     

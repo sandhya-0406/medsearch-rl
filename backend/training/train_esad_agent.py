@@ -9,10 +9,13 @@ from backend.datasets.unified_dataset import UnifiedDataset
 from backend.rl.environment.medsearch_env import MedSearchEnv
 
 from backend.agents.dqn_agent import DQNAgent
+from backend.memory.replay_buffer import ReplayBuffer
 
+from backend.training.trainer import DQNTrainer
+from backend.training.train_loop import TrainLoop
 from backend.training.state_processor import StateProcessor
 
-from backend.evaluation.evaluate import Evaluator
+from backend.visualization.plot_metrics import plot_metrics
 
 
 # Dataset
@@ -22,36 +25,36 @@ dataset = UnifiedDataset(
     mesad_path=None
 )
 
-
 # Environment
 env = MedSearchEnv(dataset)
 
 # Agent
 agent = DQNAgent()
 
-agent.load_checkpoint(
-    "backend/checkpoints/mri/best_model.pth"
+# Replay buffer
+buffer = ReplayBuffer()
+
+# Trainer
+trainer = DQNTrainer(
+    agent,
+    buffer
 )
 
 processor = StateProcessor()
 
-# Evaluator
-evaluator = Evaluator(
+# Train loop
+loop = TrainLoop(
     env,
     agent,
+    buffer,
+    trainer,
     processor
 )
 
-metrics = evaluator.evaluate(
+results = loop.train(
     num_episodes=100
 )
 
-print()
-
-print("Average Reward :", metrics["avg_reward"])
-
-print("Average IoU :", metrics["avg_iou"])
-
-print("Average Steps :", metrics["avg_steps"])
-
-print("Success Rate :", metrics["success_rate"])
+plot_metrics(
+    results
+)

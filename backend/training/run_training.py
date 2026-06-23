@@ -9,13 +9,11 @@ from backend.datasets.unified_dataset import UnifiedDataset
 from backend.rl.environment.medsearch_env import MedSearchEnv
 
 from backend.agents.dqn_agent import DQNAgent
-from backend.memory.replay_buffer import ReplayBuffer
+from backend.memory.prioritized_replay_buffer import PrioritizedReplayBuffer
 
 from backend.training.trainer import DQNTrainer
 from backend.training.train_loop import TrainLoop
 from backend.training.state_processor import StateProcessor
-
-from backend.models.cnn_feature_extractor import StateEncoder
 
 from backend.visualization.plot_metrics import plot_metrics
 
@@ -34,7 +32,7 @@ env = MedSearchEnv(dataset)
 agent = DQNAgent()
 
 # Replay buffer
-buffer = ReplayBuffer()
+buffer = PrioritizedReplayBuffer()
 
 # Trainer
 trainer = DQNTrainer(
@@ -42,13 +40,7 @@ trainer = DQNTrainer(
     buffer
 )
 
-# Encoder
-encoder = StateEncoder()
-
-# State processor
-processor = StateProcessor(
-    encoder
-)
+processor = StateProcessor()
 
 # Train loop
 loop = TrainLoop(
@@ -60,7 +52,7 @@ loop = TrainLoop(
 )
 
 results = loop.train(
-    num_episodes=2000
+    num_episodes=100
 )
 
 plot_metrics(

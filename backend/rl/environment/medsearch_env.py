@@ -8,7 +8,7 @@ from backend.rl.environment.navigation_engine import NavigationEngine
 
 class MedSearchEnv(NavigationEngine):
 
-    def __init__(self, dataset, max_steps=100):
+    def __init__(self, dataset, max_steps=150):
 
         self.dataset = dataset
         self.max_steps = max_steps
@@ -34,6 +34,7 @@ class MedSearchEnv(NavigationEngine):
         self.reward_history = []
         self.iou_history = []
         self.window_history = []
+        self.action_memory = [0] * 10
 
         idx = random.randint(
             0,
@@ -58,11 +59,11 @@ class MedSearchEnv(NavigationEngine):
         self.current_step = 0
 
         self.done = False
-        self.stopped = False
+        # self.stopped = False
 
         # Initial window
-        self.width = 192
-        self.height = 192
+        self.width = 128
+        self.height = 128
 
         self.x = random.randint(0,512-self.width)
         self.y = random.randint(0,512-self.height)
@@ -104,7 +105,7 @@ class MedSearchEnv(NavigationEngine):
 
         # Adaptive movement
         step_size = int(
-            0.15 * self.width
+            0.1 * self.width
         )
 
         # -------------------
@@ -143,10 +144,10 @@ class MedSearchEnv(NavigationEngine):
         # Stop action
         # -------------------
 
-        elif action == 6:
+        # elif action == 6:
 
-            self.done = True
-            self.stopped = True
+        #     self.done = True
+        #     self.stopped = True
 
         # -------------------
         # Boundary clipping
@@ -190,6 +191,7 @@ class MedSearchEnv(NavigationEngine):
 
         current_iou = self.compute_iou()
 
+
         self.max_iou_episode = max(
             self.max_iou_episode,
             current_iou
@@ -202,6 +204,9 @@ class MedSearchEnv(NavigationEngine):
         self.action_history.append(
             action
         )
+
+        self.action_memory.pop(0)
+        self.action_memory.append(action)
 
         self.reward_history.append(
             reward
@@ -376,12 +381,20 @@ class MedSearchEnv(NavigationEngine):
         )
 
         state = {
+
             "patch": patch,
+
             "x_norm": x_norm,
+
             "y_norm": y_norm,
+
             "w_norm": w_norm,
+
             "h_norm": h_norm,
-            "step_ratio": step_ratio
+
+            "step_ratio": step_ratio,
+
+            "action_history": self.action_memory
         }
 
         return state
@@ -389,6 +402,8 @@ class MedSearchEnv(NavigationEngine):
     def calculate_reward(self):
 
         current_iou = self.compute_iou()
+
+        # absolute_iou_reward = 5 * current_iou
 
         # ---------------------------------
         # IoU improvement reward
@@ -403,7 +418,7 @@ class MedSearchEnv(NavigationEngine):
         # ---------------------------------
         current_distance = self.compute_distance()
 
-        distance_reward = 2 * (
+        distance_reward = 5 * (
             self.previous_distance -
             current_distance
         ) / 512
@@ -422,7 +437,7 @@ class MedSearchEnv(NavigationEngine):
 
         if position not in self.visited_positions:
 
-            exploration_reward = 0.01
+            exploration_reward = 0
 
             self.visited_positions.add(position)
 
@@ -447,18 +462,18 @@ class MedSearchEnv(NavigationEngine):
 
         if current_iou >= 0.3:
 
-            success_bonus = 10
+            success_bonus = 15
 
             self.done = True
 
         # ---------------------------------
         # Early stop penalty
         # ---------------------------------
-        early_stop_penalty = 0
+        # early_stop_penalty = 0
 
-        if self.stopped and current_iou < 0.3:
+        # if self.stopped and current_iou < 0.3:
 
-            early_stop_penalty = -3
+        #     early_stop_penalty = -3
 
         # ---------------------------------
         # Failure penalty
@@ -486,7 +501,7 @@ class MedSearchEnv(NavigationEngine):
 
             + distance_reward
 
-            + exploration_reward
+            # + exploration_reward
 
             + step_penalty
 
@@ -494,9 +509,11 @@ class MedSearchEnv(NavigationEngine):
 
             + success_bonus
 
-            + early_stop_penalty
+            # + early_stop_penalty
 
             + failure_penalty
+
+            # + absolute_iou_reward
 
         )
 

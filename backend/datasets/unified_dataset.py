@@ -1,49 +1,60 @@
-
-from backend.datasets.mri_loader import load_sample as load_mri_sample
-from backend.datasets.mri_loader import get_all_mat_files
+from backend.datasets.mri_loader import load_sample, get_all_mat_files
 from backend.preprocessing.pipeline import preprocess_sample
 from backend.datasets.esad_loader import ESADLoader
 from backend.datasets.mesad_loader import MESADLoader
+
 
 class UnifiedDataset:
 
     def __init__(
         self,
-        mri_path,
-        esad_path,
-        mesad_path
+        mri_path=None,
+        esad_path=None,
+        mesad_path=None
     ):
 
-        self.mri_files = get_all_mat_files(
-            mri_path
+        # MRI
+        self.mri_files = (
+            get_all_mat_files(mri_path)
+            if mri_path is not None
+            else []
         )
 
-        self.esad_loader = ESADLoader(
-            esad_path
+        # ESAD
+        self.esad_loader = (
+            ESADLoader(esad_path)
+            if esad_path is not None
+            else None
         )
 
-        self.mesad_loader = MESADLoader(
-            mesad_path
+        # MESAD
+        self.mesad_loader = (
+            MESADLoader(mesad_path)
+            if mesad_path is not None
+            else None
         )
 
-        self.mri_count = len(
-            self.mri_files
+        self.mri_count = len(self.mri_files)
+
+        self.esad_count = (
+            len(self.esad_loader)
+            if self.esad_loader is not None
+            else 0
         )
 
-        self.esad_count = len(
-            self.esad_loader
-        )
-
-        self.mesad_count = len(
-            self.mesad_loader
+        self.mesad_count = (
+            len(self.mesad_loader)
+            if self.mesad_loader is not None
+            else 0
         )
 
 
     def __getitem__(self, idx):
 
+        # MRI
         if idx < self.mri_count:
 
-            sample = load_mri_sample(
+            sample = load_sample(
                 self.mri_files[idx]
             )
 
@@ -51,6 +62,7 @@ class UnifiedDataset:
 
         idx -= self.mri_count
 
+        # ESAD
         if idx < self.esad_count:
 
             sample = self.esad_loader.load_sample(
@@ -61,16 +73,24 @@ class UnifiedDataset:
 
         idx -= self.esad_count
 
-        sample = self.mesad_loader.load_sample(
-            idx
+        # MESAD
+        if idx < self.mesad_count:
+
+            sample = self.mesad_loader.load_sample(
+                idx
+            )
+
+            return preprocess_sample(sample)
+
+        raise IndexError(
+            f"Index {idx} out of range"
         )
 
-        return preprocess_sample(sample)
-    
+
     def __len__(self):
 
         return (
-            self.mri_count +
-            self.esad_count +
-            self.mesad_count
+            self.mri_count
+            + self.esad_count
+            + self.mesad_count
         )

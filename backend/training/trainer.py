@@ -1,3 +1,5 @@
+# backend/training/trainer.py
+
 import torch
 import torch.nn.functional as F
 
@@ -8,12 +10,14 @@ class DQNTrainer:
             self,
             agent,
             replay_buffer,
-            batch_size=64
+            batch_size=64,
+            beta=0.4
     ):
 
         self.agent = agent
         self.replay_buffer = replay_buffer
         self.batch_size = batch_size
+        self.beta = beta
 
     def train_step(self):
 
@@ -25,22 +29,67 @@ class DQNTrainer:
             actions,
             rewards,
             next_states,
-            dones
+            dones,
+            indices,
+            weights
+
         ) = self.replay_buffer.sample(
-            self.batch_size
+            self.batch_size,
+            self.beta
         )
 
         device = self.agent.device
 
-        states = torch.FloatTensor(states).to(device)
-        next_states = torch.FloatTensor(next_states).to(device)
+        #
+        # unpack states
+        #
 
-        actions = torch.LongTensor(actions).to(device)
-        rewards = torch.FloatTensor(rewards).to(device)
-        dones = torch.FloatTensor(dones).to(device)
+        state_patches = torch.stack(
+            [s[0] for s in states],
+            dim=0
+        ).to(device)
+
+        state_spatials = torch.stack(
+            [s[1] for s in states],
+            dim=0
+        ).to(device)
+
+        next_patches = torch.stack(
+            [s[0] for s in next_states],
+            dim=0
+        ).to(device)
+
+        next_spatials = torch.stack(
+            [s[1] for s in next_states],
+            dim=0
+        ).to(device)
+
+        actions = torch.LongTensor(
+            actions
+        ).to(device)
+
+        rewards = torch.FloatTensor(
+            rewards
+        ).to(device)
+
+        dones = torch.FloatTensor(
+            dones
+        ).to(device)
+
+        weights = torch.FloatTensor(
+            weights
+        ).to(device)
+
+
+        #
+        # current Q
+        #
 
         current_q_values = self.agent.q_network(
-            states
+
+            state_patches,
+            state_spatials
+
         )
 
         current_q_values = current_q_values.gather(
@@ -48,30 +97,92 @@ class DQNTrainer:
             actions.unsqueeze(1)
         ).squeeze(1)
 
+        #
+        # Double DQN target
+        #
+
         with torch.no_grad():
 
-            next_q_values = self.agent.target_network(
-                next_states
+            next_actions = self.agent.q_network(
+
+                next_patches,
+                next_spatials
+
+            ).argmax(
+                dim=1,
+                keepdim=True
             )
 
-            max_next_q_values = next_q_values.max(
-                dim=1
-            )[0]
+            next_q_values = self.agent.target_network(
 
-            target_q_values = rewards + \
-                              self.agent.gamma * \
-                              max_next_q_values * \
-                              (1 - dones)
+                next_patches,
+                next_spatials
 
-        loss = F.mse_loss(
-            current_q_values,
-            target_q_values
+            ).gather(
+                1,
+                next_actions
+            ).squeeze(1)
+
+            target_q_values = rewards + (
+
+                1 - dones
+
+            ) * self.agent.gamma * next_q_values
+
+        #
+        # TD error
+        #
+
+        td_errors = (
+
+            target_q_values -
+            current_q_values
+
         )
+
+        #
+        # weighted PER loss
+        #
+
+        loss = (
+
+            weights *
+
+            F.smooth_l1_loss(
+
+                current_q_values,
+                target_q_values,
+                reduction="none"
+
+            )
+
+        ).mean()
 
         self.agent.optimizer.zero_grad()
 
         loss.backward()
 
+        torch.nn.utils.clip_grad_norm_(
+
+            self.agent.q_network.parameters(),
+            10
+
+        )
+
         self.agent.optimizer.step()
+
+        #
+        # update priorities
+        #
+
+        self.replay_buffer.update_priorities(
+
+            indices,
+
+            td_errors.detach()
+                     .cpu()
+                     .numpy()
+
+        )
 
         return loss.item()

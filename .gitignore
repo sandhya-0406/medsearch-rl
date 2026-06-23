@@ -7,6 +7,9 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
+#visualization
+visualization/
+
 # Model training
 checkpoints/
 

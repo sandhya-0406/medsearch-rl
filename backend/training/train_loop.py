@@ -16,8 +16,8 @@ class TrainLoop:
             replay_buffer,
             trainer,
             state_processor,
-            target_update_freq=50,
-            checkpoint_dir="backend/checkpoints"
+            target_update_freq=100,
+            checkpoint_dir="backend/checkpoints/mri"
     ):
 
         self.env = env
@@ -94,10 +94,6 @@ class TrainLoop:
 
             self.agent.decay_epsilon()
 
-            if episode % self.target_update_freq == 0:
-
-                self.agent.update_target_network()
-
             avg_loss = (
 
                 np.mean(
@@ -128,6 +124,9 @@ class TrainLoop:
                 self.agent.epsilon
             )
 
+            if episode % self.target_update_freq == 0:
+                self.agent.update_target_network()
+
             if episode_reward > best_reward:
 
                 best_reward = episode_reward
@@ -136,7 +135,7 @@ class TrainLoop:
 
                     os.path.join(
                         self.checkpoint_dir,
-                        "best_model.pth"
+                        "per_updated_model.pth"
                     )
 
                 )
