@@ -8,6 +8,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 #visualization
+backend/visualization/
 visualization/
 
 # Model training
