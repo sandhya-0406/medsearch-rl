@@ -32,7 +32,7 @@ env = MRIEnv(dataset)
 agent = DQNAgent()
 
 agent.load_checkpoint(
-    "backend/checkpoints/mri/double_dqn_model.pth"
+    "backend/checkpoints/mri/double_dqn_model2.pth"
 )
 
 processor = StateProcessor()

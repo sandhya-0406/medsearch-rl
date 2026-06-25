@@ -16,7 +16,7 @@ class TrainLoop:
             replay_buffer,
             trainer,
             state_processor,
-            target_update_freq=20,
+            target_update_freq=40,
             checkpoint_dir="backend/checkpoints/mri"
     ):
 
@@ -46,6 +46,7 @@ class TrainLoop:
         iou_history = []
 
         best_reward = -np.inf
+        best_iou = 0
 
         for episode in tqdm(range(num_episodes)):
 
@@ -127,7 +128,6 @@ class TrainLoop:
             if episode % self.target_update_freq == 0:
                 self.agent.update_target_network()
 
-            best_iou = 0
 
             if info["iou"] > best_iou:
                 best_iou = info["iou"]
@@ -139,7 +139,7 @@ class TrainLoop:
 
                     os.path.join(
                         self.checkpoint_dir,
-                        "double_dqn_model.pth"
+                        "double_dqn_model2.pth"
                     )
 
                 )

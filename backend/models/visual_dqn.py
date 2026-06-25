@@ -75,7 +75,7 @@ class VisualDQN(nn.Module):
         )
 
         ####################################################
-        # Shared Fully Connected Layers
+        # Shared Feature Layer
         ####################################################
 
         self.shared = nn.Sequential(
@@ -166,7 +166,7 @@ class VisualDQN(nn.Module):
         )
 
         ####################################################
-        # Shared Representation
+        # Shared Features
         ####################################################
 
         shared_features = self.shared(
@@ -174,7 +174,7 @@ class VisualDQN(nn.Module):
         )
 
         ####################################################
-        # Dueling Streams
+        # Value & Advantage Streams
         ####################################################
 
         value = self.value_stream(
@@ -186,9 +186,7 @@ class VisualDQN(nn.Module):
         )
 
         ####################################################
-        # Combine Streams
-        #
-        # Q(s,a) = V(s) + A(s,a) - mean(A(s,*))
+        # Dueling Q-Values
         ####################################################
 
         q_values = value + (
