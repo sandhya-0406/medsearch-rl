@@ -58,7 +58,11 @@ class UnifiedDataset:
                 self.mri_files[idx]
             )
 
-            return preprocess_sample(sample)
+            sample = preprocess_sample(sample)
+
+            sample["domain"] = "mri"
+
+            return sample
 
         idx -= self.mri_count
 
@@ -69,7 +73,11 @@ class UnifiedDataset:
                 idx
             )
 
-            return preprocess_sample(sample)
+            sample = preprocess_sample(sample)
+
+            sample["domain"] = "esad"
+
+            return sample
 
         idx -= self.esad_count
 
@@ -80,7 +88,11 @@ class UnifiedDataset:
                 idx
             )
 
-            return preprocess_sample(sample)
+            sample = preprocess_sample(sample)
+
+            sample["domain"] = "mesad"
+
+            return sample
 
         raise IndexError(
             f"Index {idx} out of range"

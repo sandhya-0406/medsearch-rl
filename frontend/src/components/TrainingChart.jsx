@@ -1,68 +1,79 @@
 import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
 } from "recharts";
 
 export default function TrainingChart({
-    data,
-    dataKey,
-    title
+  data,
+  dataKey,
+  title
 }) {
 
-    return (
-        <div
-            className="
-            rounded-3xl
-            p-8
-            bg-slate-900/70
-            backdrop-blur-xl
-            border
-            border-slate-700
-            shadow-2xl
-            "
-        >
+  return (
 
-            <h2 className="text-xl mb-4">
-                {title}
-            </h2>
+    <div
+      style={{
+        background:
+          "linear-gradient(180deg,var(--surface-2),var(--surface))",
+        border: "1px solid var(--border)"
+      }}
+      className="
+        rounded-3xl
+        p-8
+        shadow-xl
+      "
+    >
 
-            <ResponsiveContainer
-                width="100%"
-                height={300}
-            >
+      <h2 className="text-xl font-semibold mb-6">
+        {title}
+      </h2>
 
-                <LineChart data={data}>
+      <ResponsiveContainer
+        width="100%"
+        height={350}
+      >
 
-                    <CartesianGrid stroke="#334155" />
+        <LineChart data={data}>
 
-                    <XAxis stroke="#94A3B8" />
+          <CartesianGrid
+            stroke="rgba(148,163,184,.15)"
+          />
 
-                    <YAxis stroke="#94A3B8" />
+          <XAxis
+            stroke="#94A3B8"
+          />
 
-                    <Tooltip
-                    contentStyle={{
-                    backgroundColor:"#0F172A",
-                    border:"1px solid #334155",
-                    borderRadius:"12px"
-                    }}
-                    />
+          <YAxis
+            stroke="#94A3B8"
+          />
 
-                    <Line
-                    type="monotone"
-                    dataKey={dataKey}
-                    stroke="#06B6D4"
-                    strokeWidth={3}
-                    />
+          <Tooltip
+            contentStyle={{
+              background: "#0F172A",
+              border: "1px solid #334155",
+              borderRadius: "12px"
+            }}
+          />
 
-                </LineChart>
+          <Line
+            type="monotone"
+            dataKey={dataKey}
+            stroke="#22D3EE"
+            strokeWidth={4}
+            dot={false}
+          />
 
-            </ResponsiveContainer>
+        </LineChart>
 
-        </div>
-    );
+      </ResponsiveContainer>
+
+    </div>
+
+  );
+
 }

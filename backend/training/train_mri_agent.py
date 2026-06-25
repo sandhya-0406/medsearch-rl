@@ -6,12 +6,14 @@ project_root = Path.cwd()
 sys.path.append(str(project_root))
 
 from backend.datasets.unified_dataset import UnifiedDataset
-from backend.rl.environment.medsearch_env import MedSearchEnv
+from backend.rl.environment.mri_env import MRIEnv
+
+from backend.memory.replay_buffer import ReplayBuffer
+
+from backend.training.double_dqn_trainer import Trainer
 
 from backend.agents.dqn_agent import DQNAgent
-from backend.memory.prioritized_replay_buffer import PrioritizedReplayBuffer
 
-from backend.training.trainer import DQNTrainer
 from backend.training.train_loop import TrainLoop
 from backend.training.state_processor import StateProcessor
 
@@ -25,17 +27,15 @@ dataset = UnifiedDataset(
     mesad_path=None
 )
 
-# Environment
-env = MedSearchEnv(dataset)
 
 # Agent
 agent = DQNAgent()
 
-# Replay buffer
-buffer = PrioritizedReplayBuffer()
+env = MRIEnv(dataset)
 
-# Trainer
-trainer = DQNTrainer(
+buffer = ReplayBuffer()
+
+trainer = Trainer(
     agent,
     buffer
 )

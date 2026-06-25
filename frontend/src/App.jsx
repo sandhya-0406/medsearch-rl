@@ -1,16 +1,19 @@
-import Navbar from "./components/Navbar";
+import Layout from "./layout/Layout";
 import Dashboard from "./pages/Dashboard";
+
 import { ThemeProvider } from "./context/ThemeContext";
 
-export default function App(){
+export default function App() {
 
-    return(
+    return (
 
         <ThemeProvider>
 
-            <Navbar/>
+            <Layout>
 
-            <Dashboard/>
+                <Dashboard />
+
+            </Layout>
 
         </ThemeProvider>
 

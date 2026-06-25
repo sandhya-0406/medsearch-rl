@@ -1,44 +1,65 @@
 export default function MetricCard({
-    title,
-    value
-}){
+  title,
+  value,
+  color
+}) {
 
-    return(
+  return (
 
-        <div
+    <div
+      style={{
+        background:
+          "linear-gradient(180deg,var(--surface-2),var(--surface))",
+        border: "1px solid var(--border)"
+      }}
+      className="
+        rounded-3xl
+        p-7
+        relative
+        overflow-hidden
+        shadow-xl
+        transition
+        hover:-translate-y-2
+      "
+    >
 
-            style={{
-                background:"var(--card)",
-                border:"1px solid var(--border)",
-                boxShadow:"var(--shadow)"
-            }}
+      <div
+        className={`
+          absolute
+          top-0
+          left-0
+          h-1
+          w-full
+          ${color}
+        `}
+      />
 
-            className="
-            rounded-[30px]
-            p-10
-            hover:-translate-y-2
-            transition
-            duration-300
-            "
-        >
+      <p
+        style={{
+          color: "var(--muted)"
+        }}
+        className="
+          text-sm
+          mb-4
+        "
+      >
+        {title}
+      </p>
 
-            <p
-                style={{
-                    color:"var(--subtext)"
-                }}
-                className="text-xl"
-            >
-                {title}
-            </p>
+      <h2
+        style={{
+          fontFamily: "JetBrains Mono"
+        }}
+        className="
+          text-6xl
+          font-bold
+        "
+      >
+        {value}
+      </h2>
 
-            <h1 className="text-7xl font-bold mt-5">
+    </div>
 
-                {value}
-
-            </h1>
-
-        </div>
-
-    );
+  );
 
 }

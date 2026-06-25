@@ -12,9 +12,9 @@ class VisualDQN(nn.Module):
 
         super().__init__()
 
-        #
-        # CNN
-        #
+        ####################################################
+        # CNN Feature Extractor
+        ####################################################
 
         self.conv_layers = nn.Sequential(
 
@@ -59,9 +59,9 @@ class VisualDQN(nn.Module):
                 dummy
             ).shape[1]
 
-            # print("VisualDQN loaded")
-            # print("n_features =", n_features)
-            # print(__file__)
+        ####################################################
+        # Visual Feature Embedding
+        ####################################################
 
         self.feature_fc = nn.Sequential(
 
@@ -74,11 +74,11 @@ class VisualDQN(nn.Module):
 
         )
 
-        #
-        # Q-network
-        #
+        ####################################################
+        # Shared Fully Connected Layers
+        ####################################################
 
-        self.q_network = nn.Sequential(
+        self.shared = nn.Sequential(
 
             nn.Linear(
                 512 + spatial_dim,
@@ -90,7 +90,34 @@ class VisualDQN(nn.Module):
                 512,
                 256
             ),
+            nn.ReLU()
+
+        )
+
+        ####################################################
+        # Value Stream
+        ####################################################
+
+        self.value_stream = nn.Sequential(
+
+            nn.Linear(
+                256,
+                128
+            ),
             nn.ReLU(),
+
+            nn.Linear(
+                128,
+                1
+            )
+
+        )
+
+        ####################################################
+        # Advantage Stream
+        ####################################################
+
+        self.advantage_stream = nn.Sequential(
 
             nn.Linear(
                 256,
@@ -111,6 +138,10 @@ class VisualDQN(nn.Module):
             spatial_features
     ):
 
+        ####################################################
+        # CNN Features
+        ####################################################
+
         visual_features = self.conv_layers(
             image_patch
         )
@@ -119,19 +150,53 @@ class VisualDQN(nn.Module):
             visual_features
         )
 
+        ####################################################
+        # Combine Visual + Spatial Features
+        ####################################################
+
         state_vector = torch.cat(
 
-            [
+            (
                 visual_features,
                 spatial_features
-            ],
+            ),
 
             dim=1
 
         )
 
-        q_values = self.q_network(
+        ####################################################
+        # Shared Representation
+        ####################################################
+
+        shared_features = self.shared(
             state_vector
+        )
+
+        ####################################################
+        # Dueling Streams
+        ####################################################
+
+        value = self.value_stream(
+            shared_features
+        )
+
+        advantage = self.advantage_stream(
+            shared_features
+        )
+
+        ####################################################
+        # Combine Streams
+        #
+        # Q(s,a) = V(s) + A(s,a) - mean(A(s,*))
+        ####################################################
+
+        q_values = value + (
+            advantage -
+            advantage.mean(
+                dim=1,
+                keepdim=True
+            )
         )
 
         return q_values

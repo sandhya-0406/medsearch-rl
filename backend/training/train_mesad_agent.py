@@ -9,7 +9,7 @@ from backend.datasets.unified_dataset import UnifiedDataset
 from backend.rl.environment.medsearch_env import MedSearchEnv
 
 from backend.agents.dqn_agent import DQNAgent
-from backend.memory.replay_buffer import ReplayBuffer
+from backend.memory.prioritized_replay_buffer import PrioritizedReplayBuffer
 
 from backend.training.trainer import DQNTrainer
 from backend.training.train_loop import TrainLoop
@@ -32,7 +32,7 @@ env = MedSearchEnv(dataset)
 agent = DQNAgent()
 
 # Replay buffer
-buffer = ReplayBuffer()
+buffer = PrioritizedReplayBuffer()
 
 # Trainer
 trainer = DQNTrainer(
