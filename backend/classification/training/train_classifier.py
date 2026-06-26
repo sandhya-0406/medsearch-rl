@@ -119,16 +119,11 @@ def build_dataset(config):
 # Train / Validation Split
 
 def build_dataloaders(
-
-        train_dataset,
-
-        val_dataset,
-
-        config
-
+    dataset,
+    config
 ):
 
-    total = len(train_dataset)
+    total = len(dataset)
 
     train_size = int(
         total * config.train_split
@@ -162,29 +157,9 @@ def build_dataloaders(
 
     ####################################################
 
-    train_subset = Subset(
-
-        train_dataset,
-
-        train_indices
-
-    )
-
-    val_subset = Subset(
-
-        val_dataset,
-
-        val_indices
-
-    )
-
-    test_subset = Subset(
-
-        val_dataset,
-
-        test_indices
-
-    )
+    train_subset = Subset(dataset, train_indices)
+    val_subset = Subset(dataset, val_indices)
+    test_subset = Subset(dataset, test_indices)
 
     ####################################################
 
@@ -493,7 +468,7 @@ def main():
 
     # Select Dataset
     
-    config = Config(dataset="mri")
+    config = Config(dataset="esad")
 
     # config = ESADConfig()
 

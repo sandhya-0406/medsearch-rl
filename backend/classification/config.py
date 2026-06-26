@@ -9,7 +9,7 @@ class Config:
     # Dataset
     
 
-    dataset: str = "mri"
+    dataset: str = "esad"
 
     
     # Paths
@@ -41,7 +41,7 @@ class Config:
 
     batch_size: int = 16
 
-    num_workers: int = 4
+    num_workers: int = 2
 
     shuffle: bool = True
 
@@ -51,7 +51,7 @@ class Config:
     # Training
     
 
-    epochs: int = 2
+    epochs: int = 50
 
     learning_rate: float = 1e-3
 
@@ -81,7 +81,7 @@ class Config:
     # Checkpoints
     
 
-    checkpoint_dir: str = "/content/drive/MyDrive/MedSearch/checkpoints/classifier"
+    checkpoint_dir: str = "/content/drive/MyDrive/MedSearch/checkpoints/{dataset}"
 
     save_best: str = "f1"
 
@@ -89,7 +89,7 @@ class Config:
     # Logging
     
 
-    result_dir: str = "/content/drive/MyDrive/MedSearch/results/classifier"
+    result_dir: str = "/content/drive/MyDrive/MedSearch/results/{dataset}"
 
     verbose: bool = True
 

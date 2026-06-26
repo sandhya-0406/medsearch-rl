@@ -17,40 +17,53 @@ class ESADLoader:
                 if line.strip()
             ]
 
-        self.image_files = list(
-            self.dataset_path.rglob("*.jpg")
-        )
+        self.image_files = []
+
+        self.image_files = []
+
+        # Build image list from annotation files instead of image files
+        for txt_path in self.dataset_path.rglob("*.txt"):
+
+            # Skip obj.names
+            if txt_path.name == "obj.names":
+                continue
+
+            image_path = txt_path.with_suffix(".jpg")
+
+            if image_path.exists():
+                self.image_files.append(image_path)
 
     def load_labels(self, txt_path):
 
-        boxes = []
-        labels = []
+      boxes = []
+      labels = []
 
-        if txt_path.stat().st_size == 0:
-            return boxes, labels
+      if not txt_path.exists():
+          return boxes, labels
 
-        with open(txt_path, "r") as f:
+      if txt_path.stat().st_size == 0:
+          return boxes, labels
 
-            for line in f:
+      with open(txt_path, "r") as f:
 
-                parts = line.strip().split()
+          for line in f:
 
-                class_id = int(parts[0])
+              parts = line.strip().split()
 
-                cx = float(parts[1])
-                cy = float(parts[2])
-                w = float(parts[3])
-                h = float(parts[4])
+              class_id = int(parts[0])
 
-                boxes.append(
-                    [cx, cy, w, h]
-                )
+              cx = float(parts[1])
+              cy = float(parts[2])
+              w = float(parts[3])
+              h = float(parts[4])
 
-                labels.append(
-                     CLASS_MAP[self.class_names[class_id]]
-                )
+              boxes.append([cx, cy, w, h])
 
-        return boxes, labels
+              labels.append(
+                  CLASS_MAP[self.class_names[class_id]]
+              )
+
+      return boxes, labels
     
     def yolo_to_bbox(
         self,

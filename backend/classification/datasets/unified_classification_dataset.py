@@ -122,71 +122,46 @@ class UnifiedClassificationDataset(
 
         self.samples = []
 
+
         ########################################################
 
-        for sample in self.dataset:
+        for i, sample in enumerate(self.dataset):
 
-            domain = sample["domain"].lower()
+          if i % 1000 == 0:
+              print(f"Processed {i}/{len(self.dataset)} images")
 
-            if domain != self.dataset_type:
+          domain = sample["domain"].lower()
 
-                continue
+          if domain != self.dataset_type:
+              continue
 
-            image = sample["image"]
+          image = sample["image"]
+          boxes = sample["boxes"]
+          labels = sample["labels"]
 
-            boxes = sample["boxes"]
+          if len(boxes) == 0:
+              continue
 
-            labels = sample["labels"]
+          for box, label in zip(boxes, labels):
 
-            if len(boxes) == 0:
+              label = int(label)
 
-                continue
+              if self.dataset_type == "mri":
+                  label = self.label_map[label]
 
-            ####################################################
+              self.samples.append({
 
-            for box, label in zip(
+                  "image": image,
 
-                    boxes,
+                  "bbox": [
+                      int(box[0]),
+                      int(box[1]),
+                      int(box[2]),
+                      int(box[3])
+                  ],
 
-                    labels
-
-            ):
-
-                label = int(label)
-
-                if self.dataset_type == "mri":
-
-                    label = self.label_map[label]
-
-                self.samples.append(
-
-                    {
-
-                        "image": image,
-
-                        "bbox": [
-
-                            int(box[0]),
-
-                            int(box[1]),
-
-                            int(box[2]),
-
-                            int(box[3])
-
-                        ],
-
-                        "label": label
-
-                    }
-
-                )
-
-        print(
-
-            f"Loaded {len(self.samples)} objects."
-
-        )
+                  "label": label
+              })
 
     ############################################################
 
