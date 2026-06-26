@@ -15,11 +15,11 @@ class Config:
     # Paths
     
 
-    mri_path: str = "/content/datasets/figshare"
+    mri_path: str = "/content/drive/MyDrive/MedSearch/extracted/figshare"
 
-    esad_path: str = "/content/datasets/esad"
+    esad_path: str = "/content/drive/MyDrive/MedSearch/extracted/esad"
 
-    mesad_path: str = "/content/datasets/mesad"
+    mesad_path: str = "/content/drive/MyDrive/MedSearch/extracted/mesad"
 
     
     # Image
