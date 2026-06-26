@@ -51,15 +51,23 @@ class UnifiedClassificationDataset(
 
         self.dataset_type = dataset_type.lower()
 
-        self.dataset = UnifiedDataset(
+        if self.dataset_type == "mri":
+          self.dataset = UnifiedDataset(
+              mri_path=mri_path
+          )
 
-            mri_path=mri_path,
+        if self.dataset_type == "esad":
+          self.dataset = UnifiedDataset(
+              esad_path=esad_path
+          )
 
-            esad_path=esad_path,
+        if self.dataset_type == "mesad":
+          self.dataset = UnifiedDataset(
+              mesad_path=mesad_path
+          )
 
-            mesad_path=mesad_path
-
-        )
+        if self.dataset_type == "figshare":
+            self.dataset_type = "mri"
 
         if self.dataset_type == "mri":
 

@@ -64,46 +64,57 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 # Dataset
+def build_dataset(config):
 
-def build_datasets(config):
-
-    train_dataset = UnifiedClassificationDataset(
-
+    return UnifiedClassificationDataset(
         dataset_type=config.dataset,
-
         mri_path=config.mri_path,
-
         esad_path=config.esad_path,
-
         mesad_path=config.mesad_path,
-
         image_size=config.image_size,
-
         padding=config.padding,
-
         train=True
-
     )
 
-    val_dataset = UnifiedClassificationDataset(
+# def build_datasets(config):
 
-        dataset_type=config.dataset,
+#     train_dataset = UnifiedClassificationDataset(
 
-        mri_path=config.mri_path,
+#         dataset_type=config.dataset,
 
-        esad_path=config.esad_path,
+#         mri_path=config.mri_path,
 
-        mesad_path=config.mesad_path,
+#         esad_path=config.esad_path,
 
-        image_size=config.image_size,
+#         mesad_path=config.mesad_path,
 
-        padding=config.padding,
+#         image_size=config.image_size,
 
-        train=False
+#         padding=config.padding,
 
-    )
+#         train=True
 
-    return train_dataset, val_dataset
+#     )
+
+#     val_dataset = UnifiedClassificationDataset(
+
+#         dataset_type=config.dataset,
+
+#         mri_path=config.mri_path,
+
+#         esad_path=config.esad_path,
+
+#         mesad_path=config.mesad_path,
+
+#         image_size=config.image_size,
+
+#         padding=config.padding,
+
+#         train=False
+
+#     )
+
+#     return train_dataset, val_dataset
 
 # Train / Validation Split
 
@@ -279,27 +290,20 @@ def train(config):
     # Dataset
     
 
-    train_dataset, val_dataset = build_datasets(config)
+    dataset = build_dataset(config)
 
     train_loader, val_loader, test_loader = build_dataloaders(
-
-    train_dataset,
-
-    val_dataset,
-
+    dataset,
     config
-
-)
+    )
 
     
     # Model
     
 
-    model = build_model(
+    model = build_model(dataset)
 
-    train_dataset
-
-)
+    model = model.to(config.device)
 
     
     # Optimizer
@@ -331,7 +335,7 @@ def train(config):
 
     class_weights = compute_class_weights(
     train_loader.dataset,
-    train_dataset.num_classes
+    dataset.num_classes
     )
 
     
@@ -426,7 +430,7 @@ def train(config):
 
         f"Classes            : "
 
-        f"{train_dataset.num_classes}"
+        f"{dataset.num_classes}"
 
     )
 

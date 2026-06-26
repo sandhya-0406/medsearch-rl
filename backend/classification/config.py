@@ -15,11 +15,11 @@ class Config:
     # Paths
     
 
-    mri_path: str = "data/figshare"
+    mri_path: str = "/content/datasets/figshare"
 
-    esad_path: str = "data/esad"
+    esad_path: str = "/content/datasets/esad"
 
-    mesad_path: str = "data/mesad"
+    mesad_path: str = "/content/datasets/mesad"
 
     
     # Image
@@ -81,7 +81,7 @@ class Config:
     # Checkpoints
     
 
-    checkpoint_dir: str = "checkpoints"
+    checkpoint_dir: str = "/content/drive/MyDrive/MedSearch/checkpoints/classifier"
 
     save_best: str = "f1"
 
@@ -89,7 +89,7 @@ class Config:
     # Logging
     
 
-    result_dir: str = "classification_results"
+    result_dir: str = "/content/drive/MyDrive/MedSearch/results/classifier"
 
     verbose: bool = True
 

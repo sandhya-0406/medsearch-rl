@@ -106,10 +106,9 @@ class Trainer:
 
         )
 
-        self.scaler = GradScaler(
-
+        self.scaler =GradScaler(
+            "cuda",
             enabled=self.mixed_precision
-
         )
 
         self.history = TrainingHistory()
@@ -401,9 +400,8 @@ class Trainer:
             )
 
             with autocast(
-
+                device_type=self.device.type,
                 enabled=self.mixed_precision
-
             ):
 
                 outputs = self.model(
@@ -529,9 +527,8 @@ class Trainer:
             
 
             with autocast(
-
+                device_type=self.device.type,
                 enabled=self.mixed_precision
-
             ):
 
                 outputs = self.model(

@@ -351,111 +351,111 @@ class TrainingVisualizer:
 
     ###########################################################
 
-def plot_dashboard(
+    def plot_dashboard(
 
-        self,
+            self,
 
-        history
-
-):
-
-    fig, axes = plt.subplots(
-
-        3,
-
-        2,
-
-        figsize=(14,12)
-
-    )
-
-    axes = axes.flatten()
-
-    plots = [
-
-        ("train_loss","val_loss","Loss"),
-
-        ("accuracy",None,"Accuracy"),
-
-        ("precision",None,"Precision"),
-
-        ("recall",None,"Recall"),
-
-        ("f1",None,"F1 Score"),
-
-        ("learning_rate",None,"Learning Rate")
-
-    ]
-
-    for ax,(a,b,title) in zip(
-
-            axes,
-
-            plots
+            history
 
     ):
 
-        ax.plot(
+        fig, axes = plt.subplots(
 
-            history[a],
+            3,
 
-            label=a
+            2,
+
+            figsize=(14,12)
 
         )
 
-        if b is not None:
+        axes = axes.flatten()
+
+        plots = [
+
+            ("train_loss","val_loss","Loss"),
+
+            ("accuracy",None,"Accuracy"),
+
+            ("precision",None,"Precision"),
+
+            ("recall",None,"Recall"),
+
+            ("f1",None,"F1 Score"),
+
+            ("learning_rate",None,"Learning Rate")
+
+        ]
+
+        for ax,(a,b,title) in zip(
+
+                axes,
+
+                plots
+
+        ):
 
             ax.plot(
 
-                history[b],
+                history[a],
 
-                label=b
+                label=a
 
             )
 
-        ax.set_title(title)
+            if b is not None:
 
-        ax.grid(True)
+                ax.plot(
 
-        ax.legend()
+                    history[b],
 
-    plt.tight_layout()
+                    label=b
 
-    plt.savefig(
+                )
 
-        os.path.join(
+            ax.set_title(title)
 
-            self.save_dir,
+            ax.grid(True)
 
-            "training_dashboard.png"
+            ax.legend()
+
+        plt.tight_layout()
+
+        plt.savefig(
+
+            os.path.join(
+
+                self.save_dir,
+
+                "training_dashboard.png"
+
+            )
 
         )
 
-    )
-
-    plt.close()
+        plt.close()
 
 
-###########################################################
+    ###########################################################
 
-def plot_all(
+    def plot_all(
 
-        self,
+            self,
 
-        history
+            history
 
-):
+    ):
 
-    self.plot_dashboard(history)
+        self.plot_dashboard(history)
 
-    self.plot_loss(history)
+        self.plot_loss(history)
 
-    self.plot_accuracy(history)
+        self.plot_accuracy(history)
 
-    self.plot_precision(history)
+        self.plot_precision(history)
 
-    self.plot_recall(history)
+        self.plot_recall(history)
 
-    self.plot_f1(history)
+        self.plot_f1(history)
 
-    self.plot_learning_rate(history)
+        self.plot_learning_rate(history)
