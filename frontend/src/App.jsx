@@ -1,7 +1,9 @@
-import Layout from "./layout/Layout";
-import Dashboard from "./pages/Dashboard";
+import Router from "./routes/routes";
 
 import { ThemeProvider } from "./context/ThemeContext";
+import { SidebarProvider } from "./context/SidebarContext";
+import { UploadProvider } from "./context/UploadContext";
+import { ExplorerProvider } from "./context/ExplorerContext";
 
 export default function App() {
 
@@ -9,11 +11,19 @@ export default function App() {
 
         <ThemeProvider>
 
-            <Layout>
+            <SidebarProvider>
 
-                <Dashboard />
+                <UploadProvider>
 
-            </Layout>
+                    <ExplorerProvider>
+
+                        <Router />
+
+                    </ExplorerProvider>
+
+                </UploadProvider>
+
+            </SidebarProvider>
 
         </ThemeProvider>
 

@@ -8,63 +8,142 @@ import {
   GitCompare,
   Lightbulb,
   Settings,
-  Microscope
+  Microscope,
+  Bot
 } from "lucide-react";
+import NavSection from "../navigation/NavSection";
+import SidebarFooter from "../navigation/SidebarFooter";
 
 const sections = [
-  {
-    title: "OVERVIEW",
-    items: [
-      {
-        icon: LayoutDashboard,
-        label: "Dashboard"
-      }
-    ]
-  },
 
-  {
-    title: "WORKFLOW",
-    items: [
-      {
-        icon: Upload,
-        label: "Upload Center"
-      }
-    ]
-  },
+    {
 
-  {
-    title: "ANALYSIS",
-    items: [
-      {
-        icon: PlayCircle,
-        label: "Replay Studio"
-      },
-      {
-        icon: BarChart3,
-        label: "Analytics"
-      },
-      {
-        icon: Brain,
-        label: "Classification"
-      },
-      {
-        icon: Flame,
-        label: "Heatmaps"
-      },
-      {
-        icon: GitCompare,
-        label: "Comparison"
-      },
-      {
-        icon: Lightbulb,
-        label: "Explainability"
-      },
-      {
-        icon: Microscope,
-        label: "Research Playground"
-      }
-    ]
-  }
+        title: "OVERVIEW",
+
+        items: [
+
+            {
+
+                icon: LayoutDashboard,
+
+                label: "Dashboard",
+
+                to: "/"
+
+            }
+
+        ]
+
+    },
+
+    {
+
+        title: "WORKFLOW",
+
+        items: [
+
+            {
+
+                icon: Upload,
+
+                label: "Upload Center",
+
+                to: "/upload"
+
+            }
+
+            // {
+            //   icon: Bot,
+
+            //   label: "Agent Explorer",
+
+            //   to: "/explorer"
+            // }
+
+        ]
+
+    },
+
+    {
+
+        title: "ANALYSIS",
+
+        items: [
+
+            {
+
+                icon: PlayCircle,
+
+                label: "Replay Studio",
+
+                to: "/replay"
+
+            },
+
+            {
+
+                icon: BarChart3,
+
+                label: "Analytics",
+
+                to: "/analytics"
+
+            },
+
+            {
+
+                icon: Brain,
+
+                label: "Classification",
+
+                to: "/classification"
+
+            },
+
+            {
+
+                icon: Flame,
+
+                label: "Heatmaps",
+
+                to: "/heatmaps"
+
+            },
+
+            {
+
+                icon: GitCompare,
+
+                label: "Comparison",
+
+                to: "/comparison"
+
+            },
+
+            {
+
+                icon: Lightbulb,
+
+                label: "Explainability",
+
+                to: "/explainability"
+
+            },
+
+            {
+
+                icon: Microscope,
+
+                label: "Research Playground",
+
+                to: "/playground"
+
+            }
+
+        ]
+
+    }
+
 ];
 
 export default function Sidebar() {
@@ -154,98 +233,32 @@ export default function Sidebar() {
       {/* NAVIGATION */}
 
       <div
-        className="
-          px-3
-          mt-8
-          flex-1
-          overflow-y-auto
-        "
+          className="
+              mt-8
+              flex-1
+              overflow-y-auto
+          "
       >
 
-        {sections.map((section) => (
+          {
 
-          <div
-            key={section.title}
-            className="mb-6"
-          >
+              sections.map(section => (
 
-            <p
-              className="
-                text-[11px]
-                font-bold
-                tracking-[0.20em]
-                px-3
-                mb-2
-              "
-              style={{
-                color: "var(--muted)"
-              }}
-            >
-              {section.title}
-            </p>
+                  <NavSection
 
-            <div className="space-y-1">
+                      key={section.title}
 
-              {section.items.map((item) => {
+                      title={section.title}
 
-                const Icon = item.icon;
+                      items={section.items}
 
-                const active =
-                  item.label === activeItem;
+                  />
 
-                return (
+              ))
 
-                  <button
-                    key={item.label}
-                    className={`
-                      w-full
-                      flex
-                      items-center
-                      gap-3
-                      px-3
-                      py-2.5
-                      rounded-xl
-                      transition-all
-                      text-sm
-
-                      ${
-                        active
-                          ? "text-cyan-400"
-                          : ""
-                      }
-                    `}
-                    style={
-                      active
-                        ? {
-                            background:
-                              "rgba(34,211,238,.10)",
-                            border:
-                              "1px solid rgba(34,211,238,.18)"
-                          }
-                        : {}
-                    }
-                  >
-
-                    <Icon size={18} />
-
-                    <span>
-                      {item.label}
-                    </span>
-
-                  </button>
-
-                );
-
-              })}
-
-            </div>
-
-          </div>
-
-        ))}
+          }
 
       </div>
-
       {/* BOTTOM AREA */}
 
       <div
@@ -311,28 +324,7 @@ export default function Sidebar() {
 
         {/* SETTINGS */}
 
-        <button
-          className="
-            w-full
-            flex
-            items-center
-            gap-3
-            px-3
-            py-2.5
-            rounded-xl
-            text-sm
-            transition-all
-            hover:bg-white/5
-          "
-        >
-
-          <Settings size={18} />
-
-          <span>
-            Settings
-          </span>
-
-        </button>
+        <SidebarFooter />
 
       </div>
 

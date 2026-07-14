@@ -117,20 +117,20 @@ class DQNAgent:
             #     (1-tau)*target_param.data
             # )
 
-    def save_checkpoint(self, path):
+    def save_checkpoint(self, path, episode=None):
 
         checkpoint = {
 
+            "episode": episode,
+
             "q_network": self.q_network.state_dict(),
 
-            "target_network":
-                self.target_network.state_dict(),
+            "target_network": self.target_network.state_dict(),
 
-            "optimizer":
-                self.optimizer.state_dict(),
+            "optimizer": self.optimizer.state_dict(),
 
-            "epsilon":
-                self.epsilon
+            "epsilon": self.epsilon
+
         }
 
         torch.save(
@@ -140,24 +140,26 @@ class DQNAgent:
 
     def load_checkpoint(self, path):
 
-        checkpoint = torch.load(
-            path,
-            map_location=self.device
-        )
+      checkpoint = torch.load(
+          path,
+          map_location=self.device
+      )
 
-        self.q_network.load_state_dict(
-            checkpoint["q_network"]
-        )
+      self.q_network.load_state_dict(
+          checkpoint["q_network"]
+      )
 
-        self.target_network.load_state_dict(
-            checkpoint["target_network"]
-        )
+      self.target_network.load_state_dict(
+          checkpoint["target_network"]
+      )
 
-        self.optimizer.load_state_dict(
-            checkpoint["optimizer"]
-        )
+      self.optimizer.load_state_dict(
+          checkpoint["optimizer"]
+      )
 
-        self.epsilon = checkpoint["epsilon"]
+      self.epsilon = checkpoint["epsilon"]
+
+      return checkpoint.get("episode", 0) + 1
 
     def predict_q_values(
             self,

@@ -1,12 +1,41 @@
-import HeroSection from "../components/HeroSection";
-import DomainCard from "../components/DomainCard";
-import ArchitectureFlow from "../components/ArchitectureFlow";
-
-// import MetricCard from "../components/MetricCard";
-import TrainingChart from "../components/TrainingChart";
-import SystemStatus from "../components/SystemStatus";
+import HeroSection from "../components/dashboard/HeroSection";
+import QuickActions from "../components/dashboard/QuickActions";
+import ActivityFeed from "../components/dashboard/ActivityFeed";
+import DatasetFoundation from "../components/dashboard/DatasetFoundation";
+import DomainCard from "../components/dashboard/DomainCard";
+import ArchitectureFlow from "../components/dashboard/ArchitectureFlow";
+import TrainingChart from "../components/dashboard/TrainingChart";
+import SystemStatus from "../components/dashboard/SystemStatus";
+import PlatformHealth from "../components/dashboard/PlatformHealth";
 
 import { rewardData } from "../data/dummyData";
+
+const domains = [
+  {
+    title: "ESAD",
+    samples: "31,748",
+    classes: "Endoscopy findings",
+    successRate: "69%",
+    extra: "Stable annotation coverage",
+    color: "linear-gradient(135deg, #22D3EE, #2563EB)"
+  },
+  {
+    title: "MESAD",
+    samples: "20,515",
+    classes: "Microscopy findings",
+    successRate: "70%",
+    extra: "Balanced across domains",
+    color: "linear-gradient(135deg, #34D399, #0EA5E9)"
+  },
+  {
+    title: "MRI",
+    samples: "16,343",
+    classes: "Brain lesion groups",
+    successRate: "71%",
+    extra: "Strong localization signals",
+    color: "linear-gradient(135deg, #F59E0B, #EF4444)"
+  }
+];
 
 export default function Dashboard() {
 
@@ -15,192 +44,60 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto p-8 space-y-10">
 
       <HeroSection />
-      <div className="mt-12">
 
-  <h2
-    className="
-      text-4xl
-      font-black
-      mb-8
-    "
-  >
-    Supported Domains
-  </h2>
+      <div className="grid lg:grid-cols-2 gap-8 mt-10">
 
-  <div
-    className="
-      grid
-      lg:grid-cols-3
-      gap-8
-    "
-  >
+          <QuickActions />
 
-    <DomainCard
-      title="Brain MRI"
-      samples="3,064"
-      classes="3"
-      successRate="70%"
-      extra="233 Patients"
-      color="
-      linear-gradient(
-      135deg,
-      #22d3ee,
-      #06b6d4
-      )"
-    />
+          <ActivityFeed />
 
-    <DomainCard
-      title="ESAD"
-      samples="40,152"
-      classes="21"
-      successRate="68%"
-      extra="Surgical Actions"
-      color="
-      linear-gradient(
-      135deg,
-      #8b5cf6,
-      #7c3aed
-      )"
-    />
+      </div>
 
-    <DomainCard
-      title="MESAD"
-      samples="25,390"
-      classes="21"
-      successRate="64%"
-      extra="Endoscopy Dataset"
-      color="
-      linear-gradient(
-      135deg,
-      #10b981,
-      #059669
-      )"
-    />
+      <div className="mt-10">
 
-  </div>
+          <DatasetFoundation />
 
-</div>
-<div
-  className="
-    elevated-card
-    rounded-[30px]
-    p-8
-    mt-10
-  "
->
+      </div>
 
-  <h2
-    className="
-      text-3xl
-      font-black
-      mb-6
-    "
-  >
-    Dataset Foundation
-  </h2>
+      <div className="mt-10">
 
-  <div
-    className="
-      grid
-      lg:grid-cols-4
-      gap-8
-    "
-  >
+          <div className="grid md:grid-cols-3 gap-6">
+            {domains.map((domain) => (
+              <DomainCard
+                key={domain.title}
+                title={domain.title}
+                samples={domain.samples}
+                classes={domain.classes}
+                successRate={domain.successRate}
+                extra={domain.extra}
+                color={domain.color}
+              />
+            ))}
+          </div>
 
-    <div>
-      <p style={{color:"var(--muted)"}}>
-        Total Samples
-      </p>
+      </div>
 
-      <h3 className="text-4xl font-black">
-        68,606
-      </h3>
-    </div>
+      <div className="mt-10">
 
-    <div>
-      <p style={{color:"var(--muted)"}}>
-        Domains
-      </p>
+          <ArchitectureFlow />
 
-      <h3 className="text-4xl font-black">
-        3
-      </h3>
-    </div>
+      </div>
 
-    <div>
-      <p style={{color:"var(--muted)"}}>
-        Total Annotations
-      </p>
+      {/* <div className="mt-10">
 
-      <h3 className="text-4xl font-black">
-        69,951
-      </h3>
-    </div>
+          <TrainingChart />
 
-    <div>
-      <p style={{color:"var(--muted)"}}>
-        Expert Agents
-      </p>
+      </div> */}
 
-      <h3 className="text-4xl font-black">
-        3
-      </h3>
-    </div>
+      {/* <div className="mt-10">
 
-  </div>
+          <PlatformHealth />
 
-</div>
-      <SystemStatus />
+      </div>
+      <SystemStatus /> */}
 
-      <section>
 
-        <h2
-          className="
-            text-2xl
-            font-bold
-            mb-6
-          "
-        >
-          Supported Domains
-        </h2>
-
-        <div
-          className="
-            grid
-            md:grid-cols-3
-            gap-6
-          "
-        >
-
-          <DomainCard
-            title="Brain MRI"
-            samples="3064"
-            classes="3"
-            extra="233 Patients"
-            color="linear-gradient(135deg,#22d3ee,#06b6d4)"
-          />
-
-          <DomainCard
-            title="ESAD"
-            samples="40152"
-            classes="21"
-            extra="Surgical Actions"
-            color="linear-gradient(135deg,#8b5cf6,#7c3aed)"
-          />
-
-          <DomainCard
-            title="MESAD"
-            samples="25390"
-            classes="21"
-            extra="Endoscopy Dataset"
-            color="linear-gradient(135deg,#10b981,#059669)"
-          />
-
-        </div>
-
-      </section>
-
-      <ArchitectureFlow />
+      {/* <ArchitectureFlow /> */}
 
       {/* <div
         className="

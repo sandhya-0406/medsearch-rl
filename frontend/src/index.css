@@ -290,3 +290,35 @@ html.dark body {
   font-weight: 700;
 
 }
+
+.input{
+
+background:var(--surface);
+
+border:1px solid var(--border);
+
+padding:.75rem 1rem;
+
+border-radius:12px;
+
+color:var(--text-primary);
+
+outline:none;
+
+transition:.2s;
+
+}
+
+.input:hover{
+
+border-color:var(--primary);
+
+}
+
+.input:focus{
+
+border-color:var(--primary);
+
+box-shadow:0 0 0 3px rgba(14,165,233,.15);
+
+}

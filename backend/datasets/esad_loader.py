@@ -26,6 +26,9 @@ class ESADLoader:
         boxes = []
         labels = []
 
+        if not txt_path.exists():
+            return boxes, labels
+
         if txt_path.stat().st_size == 0:
             return boxes, labels
 

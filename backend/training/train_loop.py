@@ -17,7 +17,7 @@ class TrainLoop:
             trainer,
             state_processor,
             target_update_freq=40,
-            checkpoint_dir="backend/checkpoints/mri"
+            checkpoint_dir="/content/drive/MyDrive/MedSearch/checkpoints/rl/mri"
     ):
 
         self.env = env
@@ -37,8 +37,9 @@ class TrainLoop:
         )
 
     def train(
-            self,
-            num_episodes=1000
+        self,
+        num_episodes=1000,
+        start_episode=0
     ):
 
         reward_history = []
@@ -48,7 +49,9 @@ class TrainLoop:
         best_reward = -np.inf
         best_iou = 0
 
-        for episode in tqdm(range(num_episodes)):
+        for episode in tqdm(
+        range(start_episode, start_episode + num_episodes)
+        ):
 
             raw_state = self.env.reset()
 
@@ -130,36 +133,52 @@ class TrainLoop:
 
 
             if info["iou"] > best_iou:
-                best_iou = info["iou"]
-            # if episode_reward > best_reward:
 
-            #     best_reward = episode_reward
+              best_iou = info["iou"]
+
+              self.agent.save_checkpoint(
+                  os.path.join(
+                      self.checkpoint_dir,
+                      "best_model.pth"
+                  ),
+                  episode=episode
+              )
+
+            # Save every 100 episodes
+            if (episode + 1) % 100 == 0:
 
                 self.agent.save_checkpoint(
 
                     os.path.join(
                         self.checkpoint_dir,
-                        "double_dqn_model2.pth"
-                    )
+                        f"checkpoint_ep_{episode+1}.pth"
+                    ),
+
+                    episode=episode
 
                 )
 
-            print(
+                print(f"Checkpoint saved at Episode {episode+1}")
 
+            print(
                 f"Episode {episode+1} | "
-
-                f"Reward = {episode_reward:.2f} | "
-
-                f"Loss = {avg_loss:.4f} | "
-
-                f"IoU = {info['iou']:.3f} | "
-
-                f"Epsilon = {self.agent.epsilon:.3f}"
-
+                f"Reward={episode_reward:.2f} | "
+                f"Loss={avg_loss:.4f} | "
+                f"IoU={info['iou']:.3f} | "
+                f"MaxIoU={info['max_iou']:.3f} | "
+                f"Epsilon={self.agent.epsilon:.3f}"
             )
-            print(
-                f"MaxIoU={info['max_iou']:.3f}"
-            )
+
+        self.agent.save_checkpoint(
+
+            os.path.join(
+                self.checkpoint_dir,
+                "final_model.pth"
+            ),
+
+            episode=num_episodes
+
+        )
 
         return {
 

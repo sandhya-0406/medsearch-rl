@@ -52,7 +52,7 @@ loop = TrainLoop(
 )
 
 results = loop.train(
-    num_episodes=100
+    num_episodes=2000
 )
 
 plot_metrics(
