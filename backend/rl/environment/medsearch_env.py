@@ -601,4 +601,47 @@ class MedSearchEnv(NavigationEngine):
 
         return distance
     
+    def load_sample(self, sample):
 
+        self.current_sample = sample
+
+        self.target_box = sample["boxes"][0]
+
+        self.current_step = 0
+
+        self.done = False
+
+        self.width = 128
+        self.height = 128
+
+        self.x = 0
+        self.y = 0
+
+        self.previous_iou = 0
+        self.previous_distance = self.compute_distance()
+
+        self.max_iou_episode = 0
+
+        self.trajectory = []
+
+        self.action_history = []
+
+        self.reward_history = []
+
+        self.iou_history = []
+
+        self.window_history = []
+
+        self.action_memory = [0] * 10
+
+        self.visited_positions = set()
+
+        self.window_history.append(
+            [self.x, self.y, self.width, self.height]
+        )
+
+        self.trajectory.append(
+            self.get_center()
+        )
+
+        return self.get_state()

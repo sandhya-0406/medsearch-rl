@@ -193,4 +193,13 @@ class DQNAgent:
             0
         ).cpu()
     
-    
+    def set_inference_mode(self):
+        """
+        Prepare the agent for inference.
+        """
+
+        self.epsilon = 0.0
+
+        self.q_network.eval()
+
+        self.target_network.eval()

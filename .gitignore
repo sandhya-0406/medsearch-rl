@@ -13,6 +13,7 @@ visualization/
 
 # Model training
 checkpoints/
+backend/weights/
 
 # Dataset files
 data/
