@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased font-inter bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-100;
+  }
+}
