@@ -28,3 +28,18 @@ export const predictMedicalImage = async (file: File): Promise<PredictResponse> 
 
   return response.data;
 };
+
+/**
+ * Converts a static public sample image URL into a genuine File instance
+ * to send to POST /api/v1/predict via multipart/form-data.
+ */
+export const fetchSampleFile = async (samplePath: string, fileName: string): Promise<File> => {
+  const response = await fetch(samplePath);
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok || !contentType.startsWith('image/')) {
+    throw new Error(`Failed to load sample image at ${samplePath}`);
+  }
+  const blob = await response.blob();
+  const fileType = blob.type || contentType;
+  return new File([blob], fileName, { type: fileType });
+};

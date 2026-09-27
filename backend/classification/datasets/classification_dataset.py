@@ -9,6 +9,14 @@ class ClassificationDataset(Dataset):
 
     """
     Base Dataset for all MedSearch-RL classification datasets.
+
+    Expected sample format:
+
+    {
+        "image_path": str,
+        "bbox": [xmin, ymin, xmax, ymax],
+        "label": int
+    }
     """
 
     def __init__(
@@ -32,19 +40,46 @@ class ClassificationDataset(Dataset):
 
         self.load_samples()
 
-    ############################################################
+    # ============================================================
+    # Load samples
+    # ============================================================
 
     def load_samples(self):
 
         raise NotImplementedError
 
-    ############################################################
+    # ============================================================
+    # Length
+    # ============================================================
 
     def __len__(self):
 
         return len(self.samples)
 
-    ############################################################
+    # ============================================================
+    # Load image
+    # ============================================================
+
+    def load_image(self, image_path):
+
+        image = cv2.imread(image_path)
+
+        if image is None:
+
+            raise FileNotFoundError(
+                f"Unable to load image: {image_path}"
+            )
+
+        image = cv2.cvtColor(
+            image,
+            cv2.COLOR_BGR2RGB
+        )
+
+        return image
+
+    # ============================================================
+    # Crop object
+    # ============================================================
 
     def crop_object(
             self,
@@ -56,12 +91,12 @@ class ClassificationDataset(Dataset):
 
         h, w = image.shape[:2]
 
+        # --------------------------------------------------------
+        # Padding
+        # --------------------------------------------------------
+
         box_w = xmax - xmin
         box_h = ymax - ymin
-
-        ########################################################
-        # Padding
-        ########################################################
 
         pad_x = int(box_w * self.padding)
         pad_y = int(box_h * self.padding)
@@ -72,9 +107,9 @@ class ClassificationDataset(Dataset):
         ymin -= pad_y
         ymax += pad_y
 
-        ########################################################
-        # Square Crop
-        ########################################################
+        # --------------------------------------------------------
+        # Square crop
+        # --------------------------------------------------------
 
         crop_w = xmax - xmin
         crop_h = ymax - ymin
@@ -94,9 +129,9 @@ class ClassificationDataset(Dataset):
         ymin = cy - side // 2
         ymax = ymin + side
 
-        ########################################################
+        # --------------------------------------------------------
         # Clip to image boundaries
-        ########################################################
+        # --------------------------------------------------------
 
         xmin = max(0, xmin)
         ymin = max(0, ymin)
@@ -109,27 +144,24 @@ class ClassificationDataset(Dataset):
             xmin:xmax
         ]
 
-        ########################################################
+        # --------------------------------------------------------
         # Safety
-        ########################################################
+        # --------------------------------------------------------
 
         if crop.size == 0:
 
             crop = np.zeros(
-
                 (
                     self.image_size,
                     self.image_size,
                     3
                 ),
-
                 dtype=np.uint8
-
             )
 
-        ########################################################
-        # MRI grayscale → RGB
-        ########################################################
+        # --------------------------------------------------------
+        # Grayscale → RGB
+        # --------------------------------------------------------
 
         if len(crop.shape) == 2:
 
@@ -147,7 +179,9 @@ class ClassificationDataset(Dataset):
 
         return crop
 
-    ############################################################
+    # ============================================================
+    # Resize
+    # ============================================================
 
     def resize(
             self,
@@ -155,17 +189,16 @@ class ClassificationDataset(Dataset):
     ):
 
         return cv2.resize(
-
             image,
-
             (
                 self.image_size,
                 self.image_size
             )
-
         )
 
-    ############################################################
+    # ============================================================
+    # Transforms
+    # ============================================================
 
     def build_transforms(self):
 
@@ -175,26 +208,32 @@ class ClassificationDataset(Dataset):
 
                 transforms.ToPILImage(),
 
-                transforms.RandomHorizontalFlip(0.5),
+                transforms.RandomHorizontalFlip(
+                    0.5
+                ),
 
-                transforms.RandomRotation(10),
+                transforms.RandomRotation(
+                    10
+                ),
 
                 transforms.ColorJitter(
-
                     brightness=0.15,
-
                     contrast=0.15
-
                 ),
 
                 transforms.ToTensor(),
 
                 transforms.Normalize(
-
-                    mean=[0.485,0.456,0.406],
-
-                    std=[0.229,0.224,0.225]
-
+                    mean=[
+                        0.485,
+                        0.456,
+                        0.406
+                    ],
+                    std=[
+                        0.229,
+                        0.224,
+                        0.225
+                    ]
                 )
 
             ])
@@ -206,16 +245,23 @@ class ClassificationDataset(Dataset):
             transforms.ToTensor(),
 
             transforms.Normalize(
-
-                mean=[0.485,0.456,0.406],
-
-                std=[0.229,0.224,0.225]
-
+                mean=[
+                    0.485,
+                    0.456,
+                    0.406
+                ],
+                std=[
+                    0.229,
+                    0.224,
+                    0.225
+                ]
             )
 
         ])
 
-    ############################################################
+    # ============================================================
+    # Get item
+    # ============================================================
 
     def __getitem__(
             self,
@@ -224,18 +270,47 @@ class ClassificationDataset(Dataset):
 
         sample = self.samples[index]
 
+        # Some dataset loaders already provide an in-memory image.
+        # Prefer that to avoid failing on missing or stale file paths.
+        image = sample.get("image")
+
+        if image is None:
+            image_path = sample.get("image_path")
+
+            if image_path is None:
+                raise FileNotFoundError(
+                    "Sample is missing both image bytes and image_path. "
+                    f"Sample keys: {sorted(sample.keys())}"
+                )
+
+            image = self.load_image(
+                image_path
+            )
+
+        elif isinstance(image, np.ndarray):
+            if image.ndim == 2:
+                image = cv2.cvtColor(
+                    image,
+                    cv2.COLOR_GRAY2RGB
+                )
+            elif image.shape[-1] == 1:
+                image = cv2.cvtColor(
+                    image,
+                    cv2.COLOR_GRAY2RGB
+                )
+
+        # Crop object
         image = self.crop_object(
-
-            sample["image"],
-
+            image,
             sample["bbox"]
-
         )
 
+        # Resize
         image = self.resize(
             image
         )
 
+        # Transform
         image = self.transform(
             image
         )

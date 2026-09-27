@@ -88,7 +88,7 @@ class ClassificationService:
         roi,
         domain
     ):
-
+        
         domain = domain.upper()
 
         if domain not in CLASS_NAMES:

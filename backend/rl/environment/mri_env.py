@@ -8,7 +8,7 @@ from backend.rl.environment.navigation_engine import NavigationEngine
 
 class MRIEnv(NavigationEngine):
 
-    def __init__(self, dataset, max_steps=150):
+    def __init__(self, dataset, max_steps=50):
 
         self.dataset = dataset
         self.max_steps = max_steps

@@ -11,47 +11,26 @@ MRI_CLASSES = [
 ESAD_CLASSES = [
 
     "CuttingMesocolon",
-
-    "PullingVasDeferens",
-
-    "ClippingVasDeferens",
-
-    "CuttingVasDeferens",
-
-    "ClippingTissue",
-
-    "PullingSeminalVesicle",
-
-    "ClippingSeminalVesicle",
-
-    "CuttingSeminalVesicle",
-
-    "SuckingBlood",
-
-    "SuckingSmoke",
-
-    "PullingTissue",
-
-    "CuttingTissue",
-
-    "ClippingLymphNode",
-
-    "CuttingLymphNode",
-
-    "PullingLymphNode",
-
-    "Gallbladder",
-
-    "Liver",
-
-    "LymphNode",
-
-    "Blood",
-
-    "Tissue",
-
-    "Background"
-
+        "PullingVasDeferens",
+        "ClippingVasDeferens",
+        "CuttingVasDeferens",
+        "ClippingTissue",
+        "PullingSeminalVesicle",
+        "ClippingSeminalVesicle",
+        "CuttingSeminalVesicle",
+        "SuckingBlood",
+        "SuckingSmoke",
+        "PullingTissue",
+        "CuttingTissue",
+        "BaggingProstate",
+        "BladderNeckDissection",
+        "BladderAnastomosis",
+        "PullingProstate",
+        "ClippingBladderNeck",
+        "CuttingThread",
+        "UrethraDissection",
+        "CuttingProstate",
+        "PullingBladderNeck"
 ]
 
 MESAD_CLASSES = ESAD_CLASSES

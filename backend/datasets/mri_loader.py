@@ -19,6 +19,7 @@ def load_sample(mat_path):
 
     return {
     "image": image,
+    "image_path": str(mat_path),
     "mask": mask,
     "boxes": [list(bbox)],
     "labels": [label],

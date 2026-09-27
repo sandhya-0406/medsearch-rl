@@ -8,7 +8,7 @@ from backend.rl.environment.navigation_engine import NavigationEngine
 
 class MedSearchEnv(NavigationEngine):
 
-    def __init__(self, dataset, max_steps=150):
+    def __init__(self, dataset, max_steps=50):
 
         self.dataset = dataset
         self.max_steps = max_steps
@@ -600,15 +600,122 @@ class MedSearchEnv(NavigationEngine):
         )
 
         return distance
+
+    def inference_step(self, action):
+
+        if self.done:
+
+            return self.get_state(), self.done, {}
+
+        step_size = int(
+            0.1 * self.width
+        )
+
+        # -------------------
+        # Movement actions
+        # -------------------
+
+        if action == 0:
+
+            self.y -= step_size
+
+        elif action == 1:
+
+            self.y += step_size
+
+        elif action == 2:
+
+            self.x -= step_size
+
+        elif action == 3:
+
+            self.x += step_size
+
+        # -------------------
+        # Zoom actions
+        # -------------------
+
+        elif action == 4:
+
+            self.zoom_in()
+
+        elif action == 5:
+
+            self.zoom_out()
+
+        # -------------------
+        # Boundary clipping
+        # -------------------
+
+        self.clip_window()
+
+        # -------------------
+        # Update step
+        # -------------------
+
+        self.current_step += 1
+
+        if self.current_step >= self.max_steps:
+
+            self.done = True
+
+        # -------------------
+        # Replay history
+        # -------------------
+
+        self.action_history.append(
+            int(action)
+        )
+
+        self.action_memory.pop(0)
+
+        self.action_memory.append(
+            int(action)
+        )
+
+        self.window_history.append(
+            [
+                self.x,
+                self.y,
+                self.width,
+                self.height
+            ]
+        )
+
+        self.trajectory.append(
+            self.get_center()
+        )
+
+        info = {
+
+            "step": self.current_step,
+
+            "window": [
+                self.x,
+                self.y,
+                self.width,
+                self.height
+            ],
+
+            "center": self.get_center()
+
+        }
+
+        return (
+            self.get_state(),
+            self.done,
+            info
+        )
     
     def load_sample(self, sample):
 
         self.current_sample = sample
 
-        self.target_box = sample["boxes"][0]
+        boxes = sample.get("boxes", [])
+
+        self.target_box = boxes[0] if boxes else None
 
         self.current_step = 0
-
         self.done = False
 
         self.width = 128
@@ -618,22 +725,21 @@ class MedSearchEnv(NavigationEngine):
         self.y = 0
 
         self.previous_iou = 0
-        self.previous_distance = self.compute_distance()
+
+        if self.target_box is not None:
+            self.previous_distance = self.compute_distance()
+        else:
+            self.previous_distance = 0.0
 
         self.max_iou_episode = 0
 
         self.trajectory = []
-
         self.action_history = []
-
         self.reward_history = []
-
         self.iou_history = []
-
         self.window_history = []
 
         self.action_memory = [0] * 10
-
         self.visited_positions = set()
 
         self.window_history.append(

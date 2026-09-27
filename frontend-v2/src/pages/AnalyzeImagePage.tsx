@@ -3,11 +3,18 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { predictMedicalImage } from '../services/api';
 import { useSessionStore } from '../stores/useSessionStore';
-import { PredictResponse, parseBBox } from '../types/api';
+import { PredictResponse, parseBBox, parseSearchWindow, parseTrajectoryPoint } from '../types/api';
+import {
+  ImageDimensions,
+  PixelPoint,
+  toPixelBoundingBox,
+  toPixelCoordinates,
+} from '../utils/coordinates';
 import { UploadZone } from '../components/medical/UploadZone';
 import { ImageViewer } from '../components/medical/ImageViewer';
 import { PredictionPanel } from '../components/medical/PredictionPanel';
 import { TrajectoryReplayer } from '../components/medical/TrajectoryReplayer';
+import { CoordinateInfoPanel } from '../components/medical/CoordinateInfoPanel';
 import { GlassCard } from '../components/common/GlassCard';
 import {
   Scan,
@@ -26,15 +33,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
-type InferenceStage =
-  | 'idle'
-  | 'domain_detection'
-  | 'rl_search'
-  | 'localization'
-  | 'classification'
-  | 'completed'
-  | 'error';
-
 export const AnalyzeImagePage: React.FC = () => {
   const navigate = useNavigate();
   const {
@@ -48,6 +46,10 @@ export const AnalyzeImagePage: React.FC = () => {
 
   const { file, previewUrl, result, stage, errorMessage } = currentAnalysis;
   const [activeStepIndex, setActiveStepIndex] = useState<number | undefined>(undefined);
+
+  // Coordinate tracking state
+  const [dimensions, setDimensions] = useState<ImageDimensions>({ naturalWidth: 512, naturalHeight: 512 });
+  const [cursorPos, setCursorPos] = useState<PixelPoint | null>(null);
 
   useEffect(() => {
     let timer1: NodeJS.Timeout;
@@ -74,15 +76,11 @@ export const AnalyzeImagePage: React.FC = () => {
       setCurrentAnalysisStage('domain_detection');
     },
     onSuccess: (data: PredictResponse) => {
-      try {
-        if (!data || data.success === false) {
-          setCurrentAnalysisError('Inference pipeline execution returned an unsuccessful status.');
-          return;
-        }
-        setAnalysisResult(data);
-      } catch {
-        setCurrentAnalysisError('Unable to process or render inference response format.');
+      if (!data || data.success === false) {
+        setCurrentAnalysisError('Inference pipeline execution returned an unsuccessful status.');
+        return;
       }
+      setAnalysisResult(data);
     },
     onError: (error: Error) => {
       setCurrentAnalysisError(
@@ -109,13 +107,28 @@ export const AnalyzeImagePage: React.FC = () => {
   };
 
   const parsedBbox = parseBBox(result?.localization?.bbox);
+  const pixelBbox = result?.localization?.bbox
+    ? toPixelBoundingBox(result.localization.bbox, dimensions)
+    : null;
 
-  const pipelineStages: { id: InferenceStage; label: string; desc: string }[] = [
-    { id: 'domain_detection', label: 'Domain Identification', desc: 'Detecting MRI / ESAD / MESAD' },
-    { id: 'rl_search', label: 'RL Visual Search', desc: 'Sequential Window Trajectory' },
-    { id: 'localization', label: 'Localization', desc: 'Bounding Box & IoU Calculation' },
-    { id: 'classification', label: 'Classification', desc: 'Surgical Action / Tumor Diagnosis' },
-  ];
+  // Trajectory and window coordinates
+  const rawTrajectory = result?.localization?.trajectory || [];
+  const trajectoryPoints = rawTrajectory.map(parseTrajectoryPoint);
+  const effectiveStep =
+    activeStepIndex !== undefined
+      ? Math.min(activeStepIndex, Math.max(0, trajectoryPoints.length - 1))
+      : Math.max(0, trajectoryPoints.length - 1);
+
+  const currentRawPoint = trajectoryPoints[effectiveStep] || null;
+  const currentAgentPixel = currentRawPoint ? toPixelCoordinates(currentRawPoint, dimensions) : null;
+
+  const windows = result?.localization?.windows || [];
+  const activeRawWindow = windows[effectiveStep] || windows[windows.length - 1];
+  const pixelSearchWindow = activeRawWindow ? toPixelBoundingBox(activeRawWindow, dimensions) : null;
+
+  const actionsList = result?.localization?.actions || [];
+  const totalSteps = result?.localization?.steps || actionsList.length || 0;
+  const currentAction = actionsList[effectiveStep] || (stage === 'completed' ? 'Target Localized' : undefined);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -125,7 +138,7 @@ export const AnalyzeImagePage: React.FC = () => {
             <Scan className="w-6 h-6 text-blue-600 dark:text-cyan-400" /> Analyze Medical Image
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-inter">
-            Execute reinforcement learning visual search, localization, and classification pipeline via POST /api/v1/predict
+            Execute reinforcement learning visual search, spatial coordinate localization, and classification.
           </p>
         </div>
 
@@ -156,7 +169,7 @@ export const AnalyzeImagePage: React.FC = () => {
                     {file?.name || 'Medical Scan'}
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    {file ? `${(file.size / 1024).toFixed(1)} KB` : 'Active Image'}
+                    {dimensions.naturalWidth} × {dimensions.naturalHeight} px &bull; {file ? `${(file.size / 1024).toFixed(1)} KB` : 'Active'}
                   </div>
                 </div>
               </div>
@@ -193,45 +206,7 @@ export const AnalyzeImagePage: React.FC = () => {
         )}
       </GlassCard>
 
-      {(predictMutation.isPending || stage === 'completed') && (
-        <GlassCard title="Inference Pipeline Progression" headerIcon={<Brain className="w-4 h-4" />}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-            {pipelineStages.map((stg, idx) => {
-              const isFinished = stage === 'completed';
-              const isCurrent = stage === stg.id && predictMutation.isPending;
-
-              return (
-                <div
-                  key={stg.id}
-                  className={`p-3 rounded-xl border transition-all duration-200 text-xs ${
-                    isFinished
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-                      : isCurrent
-                      ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-600 dark:text-cyan-400 animate-pulse'
-                      : 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 text-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center justify-between font-mono font-bold mb-1">
-                    <span>STAGE 0{idx + 1}</span>
-                    {isFinished ? (
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    ) : isCurrent ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    )}
-                  </div>
-                  <div className="font-poppins font-semibold text-slate-800 dark:text-slate-200">
-                    {stg.label}
-                  </div>
-                  <div className="text-[11px] opacity-80 mt-0.5">{stg.desc}</div>
-                </div>
-              );
-            })}
-          </div>
-        </GlassCard>
-      )}
-
+      {/* Progress & Error Displays */}
       {stage === 'error' && (
         <GlassCard className="border-rose-500/30 bg-rose-500/5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -258,14 +233,21 @@ export const AnalyzeImagePage: React.FC = () => {
         </GlassCard>
       )}
 
+      {/* Interactive Inference Results */}
       {previewUrl && result && stage === 'completed' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Main Visualizer (7 Cols) */}
+          <div className="lg:col-span-7 space-y-6">
             <GlassCard title="Medical Workstation Viewer" headerIcon={<Target className="w-4 h-4" />}>
               <ImageViewer
                 imageUrl={previewUrl}
                 localization={result.localization}
                 currentStepIndex={activeStepIndex}
+                initialCoordinatesEnabled={false}
+                onCoordinatesChange={(data) => {
+                  setDimensions(data.dimensions);
+                  setCursorPos(data.cursor);
+                }}
               />
             </GlassCard>
 
@@ -310,25 +292,20 @@ export const AnalyzeImagePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <PredictionPanel prediction={result} />
+          {/* Coordinate Info & Predictions (5 Cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            <CoordinateInfoPanel
+              dimensions={dimensions}
+              cursorPosition={cursorPos}
+              agentPosition={currentAgentPixel}
+              searchWindow={pixelSearchWindow}
+              boundingBox={pixelBbox}
+              currentStep={effectiveStep}
+              totalSteps={totalSteps}
+              currentAction={currentAction}
+            />
 
-            <GlassCard>
-              <div className="space-y-3 text-center p-2">
-                <div className="font-poppins font-semibold text-sm text-slate-800 dark:text-slate-200">
-                  Inspect Reasoning Path
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Explore full action timelines, rewards, and decision sequences in the Decision Lab.
-                </p>
-                <button
-                  onClick={() => navigate('/decision-lab')}
-                  className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs shadow-md flex items-center justify-center gap-2 transition"
-                >
-                  Open Decision Lab <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </GlassCard>
+            <PredictionPanel prediction={result} />
           </div>
         </div>
       )}

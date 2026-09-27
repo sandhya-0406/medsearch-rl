@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+import os
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 project_root = Path.cwd()
@@ -22,7 +23,7 @@ from backend.visualization.plot_metrics import plot_metrics
 
 # Dataset
 dataset = UnifiedDataset(
-    mri_path="data/figshare",
+    mri_path="/content/drive/MyDrive/MedSearch/extracted/mri",
     esad_path=None,
     mesad_path=None
 )
@@ -30,6 +31,23 @@ dataset = UnifiedDataset(
 
 # Agent
 agent = DQNAgent()
+
+checkpoint = "/content/drive/MyDrive/MedSearch/checkpoints/rl/mri/checkpoint_ep_1300.pth"
+# Change this to the latest checkpoint you have:
+# checkpoint_ep_400.pth
+# checkpoint_ep_500.pth
+# ...
+# or best_model.pth
+
+start_episode = 0
+
+if os.path.exists(checkpoint):
+
+    print("Loading checkpoint...")
+
+    start_episode = agent.load_checkpoint(checkpoint)
+
+    print(f"Resumed from episode {start_episode}")
 
 env = MRIEnv(dataset)
 
@@ -52,7 +70,8 @@ loop = TrainLoop(
 )
 
 results = loop.train(
-    num_episodes=2000
+    num_episodes=700,
+    start_episode=start_episode
 )
 
 plot_metrics(

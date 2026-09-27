@@ -1,5 +1,11 @@
 from dataclasses import dataclass
+from pathlib import Path
+
 import torch
+
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = BACKEND_DIR.parent
 
 
 @dataclass
@@ -9,7 +15,7 @@ class Config:
     # Dataset
     
 
-    dataset: str = "mri"
+    dataset: str = "esad"
 
     
     # Paths
@@ -81,7 +87,7 @@ class Config:
     # Checkpoints
     
 
-    checkpoint_dir: str = "checkpoints"
+    checkpoint_dir: str = str(BACKEND_DIR / "weights" / "classifiers")
 
     save_best: str = "f1"
 

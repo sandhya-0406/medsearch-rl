@@ -23,6 +23,6 @@ CLASS_NAMES = [
 ]
 
 CLASS_MAP = {
-    name: i + 1
+    name: i 
     for i, name in enumerate(CLASS_NAMES)
 }

@@ -51,7 +51,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       </GlassCard>
 
-      <GlassCard title="Backend Service Configuration">
+      {/* <GlassCard title="Backend Service Configuration">
         <div className="space-y-2 text-xs">
           <label className="text-slate-500 font-mono">API Base URL</label>
           <input
@@ -61,7 +61,7 @@ export const SettingsPage: React.FC = () => {
             className="w-full p-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 font-mono text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700"
           />
         </div>
-      </GlassCard>
+      </GlassCard> */}
     </div>
   );
 };

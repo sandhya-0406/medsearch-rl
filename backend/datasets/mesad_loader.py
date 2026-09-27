@@ -84,6 +84,7 @@ class MESADLoader:
 
         return {
             "image": image,
+            "image_path": str(image_path),
             "boxes": boxes,
             "labels": labels,
             "domain": "MESAD"

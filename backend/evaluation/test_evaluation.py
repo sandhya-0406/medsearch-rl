@@ -18,7 +18,7 @@ from backend.evaluation.evaluate import Evaluator
 
 # Dataset
 dataset = UnifiedDataset(
-    mri_path="data/figshare",
+    mri_path="/content/drive/MyDrive/MedSearch/extracted/mri",
     esad_path=None,
     mesad_path=None
 )
@@ -32,7 +32,7 @@ env = MRIEnv(dataset)
 agent = DQNAgent()
 
 agent.load_checkpoint(
-    "backend/checkpoints/mri/double_dqn_model2.pth"
+    "/content/drive/MyDrive/MedSearch/checkpoints/rl/mri/best_model.pth"
 )
 
 processor = StateProcessor()
